@@ -1,0 +1,9 @@
+/*can you see me*/
+const int array[2] = {1,2};
+///
+int main(){
+    int _c;
+    _c = getint();
+    printf("output is %d",c);
+    return c;
+}

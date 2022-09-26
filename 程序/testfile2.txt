@@ -1,0 +1,8 @@
+int main(){
+    int c;
+    //c = getint();//seeit can you
+    printf("%d",c/c);
+            /*redorangeyellow
+            blue purplr*/
+     return c;
+ }
