@@ -57,7 +57,9 @@ public class Compiler {
 //        }
 
         GrammarParser grammarParser=new GrammarParser(tokenArrayList);
-        grammarParser.parse();
+        String outputFile=grammarParser.parse();
+        fw.write(outputFile);
+        fw.flush();
 
         return;
 

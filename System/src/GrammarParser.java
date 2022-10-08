@@ -1,21 +1,21 @@
-
 import Node.SYMBOL;
 import Token.*;
 import Node.*;
 
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
 
 public class GrammarParser {
     private final List<Token> tokenList;
     private Integer pToken;
-
-
-    private ArrayList<Token> DEBUG_WINDOW;
+    public StringBuilder stringBuilder;
 
     public GrammarParser(List<Token> tokenList) {
         this.tokenList = tokenList;
         this.pToken = -1;
+        this.stringBuilder= new StringBuilder("");
+
     }
 
     private Token peek() {
@@ -55,13 +55,6 @@ public class GrammarParser {
         }
     }
 
-    private Token extractTokenFromLeafNode(Node node) {
-        if(!(node instanceof LeafNode)) {
-            return null;
-        }
-        return ((LeafNode)node).getToken();
-    }
-
     /* 非终结符检查函数 */
     private Node checkMultSymbol(SYMBOL... symbols) {
 //        System.out.println("Checking: " + peek().getValue() + " " + peek().getLine() + " with " + symbols);
@@ -81,12 +74,10 @@ public class GrammarParser {
         }
 
     }
-
+//    用于测试token的存在，并敲定为终结符号，设置为叶节点
     private Node checkSymbol(SYMBOL symbol) {
-//        System.out.println("Checking: " + peek().getValue() + " " + peek().getLine() + " with " + symbol);
         if (peek().getSymbol().equals(symbol)) {
             next();
-//            System.out.println("check pass");
             return new LeafNode(symbol, getCurToken(), true);
         } else {
             //  当检查失败，返回的Node内存储的是上一个符号的位置
@@ -95,23 +86,23 @@ public class GrammarParser {
 
     }
 
-    /* 符号判断函数，仅仅是因为我懒得到处写  */
-    private Node pureMulOp(int level) {
+
+    private Node pureMulOp() {
         SYMBOL[] bolster = {SYMBOL.DIV, SYMBOL.MULT, SYMBOL.MOD};
         return checkMultSymbol(bolster);
     }
 
-    private Node pureCompareOp(int level) {
+    private Node pureCompareOp() {
         SYMBOL[] bolster = {SYMBOL.LEQ, SYMBOL.GEQ, SYMBOL.LSS, SYMBOL.GRE};
         return checkMultSymbol(bolster);
     }
 
-    private Node pureEquOp(int level) {
+    private Node pureEquOp() {
         SYMBOL[] bolster = {SYMBOL.EQL, SYMBOL.NEQ};
         return checkMultSymbol(bolster);
     }
 
-    private Node pureAddOp(int level) {
+    private Node pureAddOp() {
         SYMBOL[] bolster = {SYMBOL.PLUS, SYMBOL.MINU};
         return checkMultSymbol(bolster);
     }
@@ -123,140 +114,138 @@ public class GrammarParser {
                 postorderTraversal(node);
             }
             GUNIT type = ((BranchNode) root).getGUnit();
-            if (!type.equals(GUNIT.BlockItem) &&!type.equals(GUNIT.BType) &&!type.equals(GUNIT.Decl)) {
-//                Logger.GetLogger().GrammarLog("<" + type + ">");
-                System.out.println("<"+type+">");
+            if (!type.equals(GUNIT.BlockItem) && !type.equals(GUNIT.BType) && !type.equals(GUNIT.Decl)) {
+//                System.out.println("<" + type + ">");
+                this.stringBuilder.append("<").append(type).append(">\n");
             }
         } else if (root instanceof LeafNode) {
-            System.out.println(((LeafNode) root).getType().toString() + " " + ((LeafNode) root).getToken().getValue());
-//            Logger.GetLogger().GrammarLog(((LeafNode) root).getType().toString() + " " + ((LeafNode) root).getToken().getValue());
-        } else {
-            throw new RuntimeException("IN GrammarParser: Unknown type of Node is being postorder traversing!");
+//            System.out.println(((LeafNode) root).getType().toString() + " " + ((LeafNode) root).getToken().getValue());
+            this.stringBuilder.append(((LeafNode) root).getType().toString()).append(" ").append(((LeafNode) root).getToken().getValue()).append("\n");
+
         }
     }
 
-    public Node parse() {
+    public String parse() {
         Node root = CompUnit(0);
         postorderTraversal(root);
-        return root;
+        return stringBuilder.toString();
     }
+//    编译单元解析函数
     private Node CompUnit(int level) {
-        GUNIT curBlock = GUNIT.CompUnit;
-        BranchNode ret = new BranchNode(curBlock);
+        BranchNode ret =new BranchNode(GUNIT.CompUnit);
         ArrayList<Node> children = new ArrayList<>();
 
-        while (!peek(3).getSymbol().equals(SYMBOL.LPARENT)) {
-            /* 当前往后的第三个字符，对于FuncDef和MainFunc来说都是LPARENT，而对于Decl来说不可能是LPARENT */
-            Node tmp = Decl(level + 1);
-            children.add(tmp);
+        while (!peek(3).getSymbol().equals(SYMBOL.LPARENT)){
+            Node temp = Decl(level+1);
+            children.add(temp);
         }
 
-        while (!peek(2).getSymbol().equals(SYMBOL.MAINTK)) {
-            /* 当前往后两个字符对于MainFuncDef来说一定是MAINTK，而对于FuncDef来说是IDENT */
-            Node tmp = FuncDef(level + 1);
-            children.add(tmp);  // tmp 说明该节点可有可无
+        while (!peek(2).getSymbol().equals(SYMBOL.MAINTK)){
+            Node temp = FuncDef(level+1);
+            children.add(temp);
         }
+        Node childNode = MainFuncDef(level+1);
+        children.add(childNode);
 
-        Node vipNode = MainFuncDef(level + 1);  // vipNode 说明该子节点对于当前节点是否成立来说是至关重要的
-        children.add(vipNode);  // vipNode 会被立即加入children列表，无论其是否正确
-
-        ret.setCorrect(vipNode.isCorrect());
+        ret.setCorrect(childNode.isCorrect());
         children.forEach(ret::addChild);
 
         return ret;
     }
 
     private Node Decl(int level) {
-        GUNIT curBlock = GUNIT.Decl;
-        BranchNode ret = new BranchNode(curBlock);
-        Node vipNode;
-        if (peek().getSymbol().equals(SYMBOL.CONSTTK)) {
-            vipNode = ConstDecl(level);
-        } else {
-            vipNode = VarDecl(level);
+        BranchNode ret = new BranchNode(GUNIT.Decl);
+
+        Node childNode;
+        if (peek().getSymbol().equals(SYMBOL.CONSTTK)){
+            childNode=ConstDecl(level);
+        }else {
+            childNode=VarDecl(level);
         }
-        ret.addChild(vipNode);
-        ret.setCorrect(vipNode.isCorrect());
+
+        ret.addChild(childNode);
+        ret.setCorrect(childNode.isCorrect());
+
         return ret;
     }
 
     private Node ConstDecl(int level) {
-        GUNIT curBlock = GUNIT.ConstDecl;
-        BranchNode ret = new BranchNode(curBlock);
+        BranchNode ret =new BranchNode(GUNIT.ConstDecl);
         ArrayList<Node> children = new ArrayList<>();
 
-        Node vipNode1 = checkSymbol(SYMBOL.CONSTTK);
-        children.add(vipNode1);
-        Node vipNode2 = BType(level);
-        children.add(vipNode2);
-        Node vipNode3 = ConstDef(level);
-        children.add(vipNode3);
+        Node child1 = checkSymbol(SYMBOL.CONSTTK);
+        children.add(child1);
+
+        Node child2 = BType(level);
+        children.add(child2);
+
+        Node child3 = ConstDef(level);
+        children.add(child3);
+
         while (peek().getSymbol().equals(SYMBOL.COMMA)) {
-            Node tmp1 = checkSymbol(SYMBOL.COMMA);
-            Node tmp2 = ConstDef(level);
-            children.add(tmp1);
-            children.add(tmp2);  // tmp1 和 tmp2 是相互依存的关系，因此必须一起存在
+            Node temp1 = checkSymbol(SYMBOL.COMMA);
+            Node temp2 = ConstDef(level);
+            children.add(temp1);
+            children.add(temp2);  // tmp1 和 tmp2 是相互依存的关系，因此必须一起存在
         }
-        Node vipNode4 = checkSymbol(SYMBOL.SEMICN);
-        if (!vipNode4.isCorrect()) {
-            extractTokenFromLeafNode(vipNode4).getLine();
-        }
-        children.add(vipNode4);
-        ret.setCorrect(vipNode1.isCorrect() && vipNode2.isCorrect() && vipNode3.isCorrect() && vipNode4.isCorrect());
+
+        Node child4 = checkSymbol(SYMBOL.SEMICN);
+        children.add(child4);
+
+        ret.setCorrect(child1.isCorrect()&&child2.isCorrect()&&child3.isCorrect()&&child4.isCorrect());
         children.forEach(ret::addChild);
         return ret;
     }
 
     private Node BType(int level) {
-        GUNIT curBlock = GUNIT.BType;
-        BranchNode ret = new BranchNode(curBlock);
-        Node vipNode = checkSymbol(SYMBOL.INTTK);
-        ret.addChild(vipNode);
-        ret.setCorrect(vipNode.isCorrect());
+        BranchNode ret =new BranchNode(GUNIT.BType);
+        ArrayList<Node> children = new ArrayList<>();
+
+        Node child1=checkSymbol(SYMBOL.INTTK);
+        children.add(child1);
+
+        ret.setCorrect(child1.isCorrect());
+        children.forEach(ret::addChild);
+
         return ret;
     }
 
     private Node ConstDef(int level) {
-        GUNIT curBlock = GUNIT.ConstDef;
-
-        BranchNode ret = new BranchNode(curBlock);
+        BranchNode ret =new BranchNode(GUNIT.ConstDef);
         ArrayList<Node> children = new ArrayList<>();
 
-        Node vipNode1 = checkSymbol(SYMBOL.IDENFR);
-        children.add(vipNode1);
+        Node child1=checkSymbol(SYMBOL.IDENFR);
+        children.add(child1);
+
         while (peek().getSymbol().equals(SYMBOL.LBRACK)) {
             Node tmp1 = checkSymbol(SYMBOL.LBRACK);
             Node tmp2 = ConstExp(level);
-
             Node tmp3 = checkSymbol(SYMBOL.RBRACK);
-            if (!tmp3.isCorrect()) {
-//                logU4Error(Error.leftBraketMissingError());
-                extractTokenFromLeafNode(tmp3).getLine();
-            }
-
             children.add(tmp1);
             children.add(tmp2);
             children.add(tmp3);
         }
-        Node vipNode2 = checkSymbol(SYMBOL.ASSIGN);
-        children.add(vipNode2);
-        Node vipNode3 = ConstInitVal(level);
-        children.add(vipNode3);
-        ret.setCorrect(vipNode1.isCorrect() && vipNode2.isCorrect() && vipNode3.isCorrect());
+
+        Node child2 = checkSymbol(SYMBOL.ASSIGN);
+        children.add(child2);
+
+        Node child3 = ConstInitVal(level);
+        children.add(child3);
+
+        ret.setCorrect(child1.isCorrect()&&child2.isCorrect()&&child3.isCorrect());
         children.forEach(ret::addChild);
+
         return ret;
     }
 
     private Node ConstInitVal(int level) {
-        GUNIT curBlock = GUNIT.ConstInitVal;
-
-        BranchNode ret = new BranchNode(curBlock);
+        BranchNode ret =new BranchNode(GUNIT.ConstInitVal);
         ArrayList<Node> children = new ArrayList<>();
 
-        Node vipNode1;
+        Node child1;
         if (peek().getSymbol().equals(SYMBOL.LBRACE)) {
-            vipNode1 = checkSymbol(SYMBOL.LBRACE);
-            children.add(vipNode1);
+            child1 = checkSymbol(SYMBOL.LBRACE);
+            children.add(child1);
 
             if (!peek().getSymbol().equals(SYMBOL.RBRACE)) {
                 Node tmp1 = ConstInitVal(level);
@@ -269,29 +258,29 @@ public class GrammarParser {
                 }
 
             }
-            Node vipNode2 = checkSymbol(SYMBOL.RBRACE);
-            children.add(vipNode2);
+            Node child2 = checkSymbol(SYMBOL.RBRACE);
+            children.add(child2);
 
-            ret.setCorrect(vipNode1.isCorrect() && vipNode2.isCorrect());
+            ret.setCorrect(child1.isCorrect() && child2.isCorrect());
             children.forEach(ret::addChild);
         } else {
-            vipNode1 = ConstExp(level);
-            ret.setCorrect(vipNode1.isCorrect());
-            ret.addChild(vipNode1);
+            child1 = ConstExp(level);
+            ret.setCorrect(child1.isCorrect());
+            ret.addChild(child1);
         }
+
         return ret;
     }
 
     private Node VarDecl(int level) {
-        GUNIT curBlock = GUNIT.VarDecl;
-
-        BranchNode ret = new BranchNode(curBlock);
+        BranchNode ret =new BranchNode(GUNIT.VarDecl);
         ArrayList<Node> children = new ArrayList<>();
 
-        Node vipNode1 = BType(level);
-        children.add(vipNode1);
-        Node vipNode2 = VarDef(level);
-        children.add(vipNode2);
+        Node child1 = BType(level);
+        children.add(child1);
+
+        Node child2 = VarDef(level);
+        children.add(child2);
 
         while (peek().getSymbol().equals(SYMBOL.COMMA)) {
             Node tmp1 = checkSymbol(SYMBOL.COMMA);
@@ -299,62 +288,55 @@ public class GrammarParser {
             children.add(tmp1);
             children.add(tmp2);
         }
-        Node vipNode3 = checkSymbol(SYMBOL.SEMICN);
-        if (!vipNode3.isCorrect()) {
-//            logU4Error(Error.semiconMissingError());
-            extractTokenFromLeafNode(vipNode3).getLine();
-        }
 
-        children.add(vipNode3);
+        Node child3 = checkSymbol(SYMBOL.SEMICN);
+        children.add(child3);
 
-        ret.setCorrect(vipNode1.isCorrect() && vipNode2.isCorrect() && vipNode3.isCorrect());
+        ret.setCorrect(child1.isCorrect()&&child2.isCorrect()&&child3.isCorrect());
         children.forEach(ret::addChild);
         return ret;
+
     }
 
     private Node VarDef(int level) {
-        GUNIT curBlock = GUNIT.VarDef;
 
-        BranchNode ret = new BranchNode(curBlock);
+        BranchNode ret = new BranchNode(GUNIT.VarDef);
         ArrayList<Node> children = new ArrayList<>();
 
-        Node vipNode1 = checkSymbol(SYMBOL.IDENFR);
-        children.add(vipNode1);
+        Node child1 = checkSymbol(SYMBOL.IDENFR);
+        children.add(child1);
 
         while (peek().getSymbol().equals(SYMBOL.LBRACK)) {
-            Node tmp1 = checkSymbol(SYMBOL.LBRACK);
-            Node tmp2 = ConstExp(level);
-            Node tmp3 = checkSymbol(SYMBOL.RBRACK);
-            if (!tmp3.isCorrect()) {
-//                logU4Error(Error.leftBraketMissingError());
-                extractTokenFromLeafNode(tmp3).getLine();
-            }
+            Node temp1 = checkSymbol(SYMBOL.LBRACK);
+            Node temp2 = ConstExp(level);
+            Node temp3 = checkSymbol(SYMBOL.RBRACK);
 
-            children.add(tmp1);
-            children.add(tmp2);
-            children.add(tmp3);
+            children.add(temp1);
+            children.add(temp2);
+            children.add(temp3);
         }
 
         if (peek().getSymbol().equals(SYMBOL.ASSIGN)) {
-            Node tmp1 = checkSymbol(SYMBOL.ASSIGN);
-            Node tmp2 = InitVal(level);
-            children.add(tmp1);
-            children.add(tmp2);
+            Node temp1 = checkSymbol(SYMBOL.ASSIGN);
+            Node temp2 = InitVal(level);
+            children.add(temp1);
+            children.add(temp2);
         }
 
-        ret.setCorrect(vipNode1.isCorrect());
+        ret.setCorrect(child1.isCorrect());
         children.forEach(ret::addChild);
         return ret;
+
+
     }
 
     private Node InitVal(int level) {
-        GUNIT curBlock = GUNIT.InitVal;
-        BranchNode ret = new BranchNode(curBlock);
+        BranchNode ret = new BranchNode(GUNIT.InitVal);
         ArrayList<Node> children = new ArrayList<>();
 
         if (peek().getSymbol().equals(SYMBOL.LBRACE)) {
-            Node vipNode1 = checkSymbol(SYMBOL.LBRACE);
-            children.add(vipNode1);
+            Node child1 = checkSymbol(SYMBOL.LBRACE);
+            children.add(child1);
 
             if (!peek().getSymbol().equals(SYMBOL.RBRACE)) {
                 Node tmp1 = InitVal(level);
@@ -367,107 +349,98 @@ public class GrammarParser {
                 }
             }
 
-            Node vipNode2 = checkSymbol(SYMBOL.RBRACE);
-            children.add(vipNode2);
+            Node child2 = checkSymbol(SYMBOL.RBRACE);
+            children.add(child2);
 
-            ret.setCorrect(vipNode1.isCorrect() && vipNode2.isCorrect());
+            ret.setCorrect(child1.isCorrect() && child2.isCorrect());
         } else {
-            Node vipNode1 = Exp(level);
-            children.add(vipNode1);
+            Node child1 = Exp(level);
+            children.add(child1);
 
-            ret.setCorrect(vipNode1.isCorrect());
+            ret.setCorrect(child1.isCorrect());
         }
 
         children.forEach(ret::addChild);
         return ret;
+
     }
 
     private Node FuncDef(int level) {
-        GUNIT curBlock = GUNIT.FuncDef;
-        BranchNode ret = new BranchNode(curBlock);
+        BranchNode ret = new BranchNode(GUNIT.FuncDef);
         ArrayList<Node> children = new ArrayList<>();
 
-        Node vipNode1 = FuncType(level);
-        children.add(vipNode1);
+        Node child1 = FuncType(level);
+        children.add(child1);
 
-        Node vipNode2 = checkSymbol(SYMBOL.IDENFR);
-        children.add(vipNode2);
+        Node child2 = checkSymbol(SYMBOL.IDENFR);
+        children.add(child2);
 
-        Node vipNode3 = checkSymbol(SYMBOL.LPARENT);
-        children.add(vipNode3);
+        Node child3 = checkSymbol(SYMBOL.LPARENT);
+        children.add(child3);
 
-        if (isNextFuncFParams()) {
-            Node tmp1 = FuncFParams(level);
-            children.add(tmp1);
+        if (isNextFuncFParams()){
+            Node child4 = FuncFParams(level);
+            children.add(child4);
         }
 
-        Node vipNode4 = checkSymbol(SYMBOL.RPARENT);
-        if (!vipNode4.isCorrect()) {
-//            logU4Error(Error.leftParentMissingError());
-            extractTokenFromLeafNode(vipNode4).getLine();
-        }
-        children.add(vipNode4);
+        Node child5 = checkSymbol(SYMBOL.RPARENT);
+        children.add(child5);
 
-        Node vipNode5 = Block(level + 1);
-        children.add(vipNode5);
+        Node child6 = Block(level+1);
+        children.add(child6);
 
-        ret.setCorrect(vipNode1.isCorrect() && vipNode2.isCorrect() && vipNode3.isCorrect() && vipNode4.isCorrect() && vipNode5.isCorrect());
+        ret.setCorrect(child1.isCorrect()&&child2.isCorrect()&&child3.isCorrect()&&child5.isCorrect()&&child6.isCorrect());
 
         children.forEach(ret::addChild);
-        return ret;
+        return  ret;
+
     }
 
     private Node MainFuncDef(int level) {
-        GUNIT curBlock = GUNIT.MainFuncDef;
-        BranchNode ret = new BranchNode(curBlock);
+        BranchNode ret = new BranchNode(GUNIT.MainFuncDef);
         ArrayList<Node> children = new ArrayList<>();
 
-        Node vipNode1 = checkSymbol(SYMBOL.INTTK);
-        children.add(vipNode1);
-        Node vipNode2 = checkSymbol(SYMBOL.MAINTK);
-        children.add(vipNode2);
-        Node vipNode3 = checkSymbol(SYMBOL.LPARENT);
-        children.add(vipNode3);
-        Node vipNode4 = checkSymbol(SYMBOL.RPARENT);
-        if (!vipNode4.isCorrect()) {
-//            logU4Error(Error.leftParentMissingError());
-            extractTokenFromLeafNode(vipNode4).getLine();
-        }
-        children.add(vipNode4);
-        Node vipNode5 = Block(level + 1);
-        children.add(vipNode5);
+        Node child1 =checkSymbol(SYMBOL.INTTK);
+        children.add(child1);
 
-        ret.setCorrect(vipNode1.isCorrect() && vipNode2.isCorrect() && vipNode3.isCorrect() && vipNode4.isCorrect() && vipNode5.isCorrect());
+        Node child2 =checkSymbol(SYMBOL.MAINTK);
+        children.add(child2);
 
+        Node child3 =checkSymbol(SYMBOL.LPARENT);
+        children.add(child3);
+
+        Node child4 =checkSymbol(SYMBOL.RPARENT);
+        children.add(child4);
+
+        Node child5 =Block(level+1);
+        children.add(child5);
+
+        ret.setCorrect(child1.isCorrect()&&child2.isCorrect()&&child3.isCorrect()&&child5.isCorrect());
         children.forEach(ret::addChild);
         return ret;
     }
 
     private Node FuncType(int level) {
-        GUNIT curBlock = GUNIT.FuncType;
-        BranchNode ret = new BranchNode(curBlock);
+        BranchNode ret = new BranchNode(GUNIT.FuncType);
         ArrayList<Node> children = new ArrayList<>();
 
-        SYMBOL[] bolster = {SYMBOL.VOIDTK, SYMBOL.INTTK};
+        SYMBOL[] bolster ={SYMBOL.VOIDTK,SYMBOL.INTTK};
 
-        Node vipNode1 = checkMultSymbol(bolster);
-        children.add(vipNode1);
+        Node child1 = checkMultSymbol(bolster);
+        children.add(child1);
 
-        if (vipNode1.isCorrect()) {
-            ret.setCorrect(true);
-        }
-
+        ret.setCorrect(child1.isCorrect());
         children.forEach(ret::addChild);
         return ret;
     }
 
     private Node FuncFParams(int level) {
-        GUNIT curBlock = GUNIT.FuncFParams;
-        BranchNode ret = new BranchNode(curBlock);
+
+        BranchNode ret = new BranchNode(GUNIT.FuncFParams);
         ArrayList<Node> children = new ArrayList<>();
 
-        Node vipNode1 = FuncFParam(level);
-        children.add(vipNode1);
+        Node child1 = FuncFParam(level);
+        children.add(child1);
 
         while (peek().getSymbol().equals(SYMBOL.COMMA)) {
             Node tmp1 = checkSymbol(SYMBOL.COMMA);
@@ -476,29 +449,27 @@ public class GrammarParser {
             children.add(tmp2);
         }
 
-        ret.setCorrect(vipNode1.isCorrect());
+        ret.setCorrect(child1.isCorrect());
 
         children.forEach(ret::addChild);
         return ret;
+
     }
 
     private Node FuncFParam(int level) {
-        GUNIT curBlock = GUNIT.FuncFParam;
-        BranchNode ret = new BranchNode(curBlock);
+        BranchNode ret = new BranchNode(GUNIT.FuncFParam);
         ArrayList<Node> children = new ArrayList<>();
 
-        Node vipNode1 = BType(level);
-        children.add(vipNode1);
-        Node vipNode2 = checkSymbol(SYMBOL.IDENFR);
-        children.add(vipNode2);
+        Node child1 = BType(level);
+        children.add(child1);
+
+        Node child2 = checkSymbol(SYMBOL.IDENFR);
+        children.add(child1);
 
         if (peek().getSymbol().equals(SYMBOL.LBRACK)) {
             Node tmp1 = checkSymbol(SYMBOL.LBRACK);
             Node tmp2 = checkSymbol(SYMBOL.RBRACK);
-            if (!tmp2.isCorrect()) {
-//                logU4Error(Error.leftBraketMissingError());
-                extractTokenFromLeafNode(tmp2).getLine();
-            }
+
             children.add(tmp1);
             children.add(tmp2);
 
@@ -506,10 +477,6 @@ public class GrammarParser {
                 Node tmp3 = checkSymbol(SYMBOL.LBRACK);
                 Node tmp4 = ConstExp(level);
                 Node tmp5 = checkSymbol(SYMBOL.RBRACK);
-                if (!tmp5.isCorrect()) {
-//                    logU4Error(Error.leftBraketMissingError());
-                    extractTokenFromLeafNode(tmp5).getLine();
-                }
 
                 children.add(tmp3);
                 children.add(tmp4);
@@ -517,73 +484,72 @@ public class GrammarParser {
             }
         }
 
-        ret.setCorrect(vipNode1.isCorrect() && vipNode2.isCorrect());
+        ret.setCorrect(child1.isCorrect() && child2.isCorrect());
 
         children.forEach(ret::addChild);
         return ret;
+
     }
 
     private Node Block(int level) {
-        GUNIT curBlock = GUNIT.Block;
-        BranchNode ret = new BranchNode(curBlock);
+        BranchNode ret = new BranchNode(GUNIT.Block);
         ArrayList<Node> children = new ArrayList<>();
 
-        Node vipNode1 = checkSymbol(SYMBOL.LBRACE);
-        children.add(vipNode1);
+        Node child1 =checkSymbol(SYMBOL.LBRACE);
+        children.add(child1);
 
         while (!peek().getSymbol().equals(SYMBOL.RBRACE)) {
             Node tmp1 = BlockItem(level + 1);
             children.add(tmp1);
         }
 
-        Node vipNode2 = checkSymbol(SYMBOL.RBRACE);
-        children.add(vipNode2);
+        Node child2 =checkSymbol(SYMBOL.RBRACE);
+        children.add(child2);
 
-        ret.setCorrect(vipNode1.isCorrect() && vipNode2.isCorrect());
-
+        ret.setCorrect(child1.isCorrect()&&child2.isCorrect());
         children.forEach(ret::addChild);
         return ret;
+
     }
 
     private Node BlockItem(int level) {
-        GUNIT curBlock = GUNIT.BlockItem;
-        BranchNode ret = new BranchNode(curBlock);
+        BranchNode ret = new BranchNode(GUNIT.BlockItem);
         ArrayList<Node> children = new ArrayList<>();
 
-        Node vipNode1;
-        if (peek().getSymbol().equals(SYMBOL.CONSTTK) || peek().getSymbol().equals(SYMBOL.INTTK)) {
-            vipNode1 = Decl(level);
-        } else {
-            vipNode1 = Stmt(level);
+        Node child1;
+        if (peek().getSymbol().equals(SYMBOL.CONSTTK) || peek().getSymbol().equals(SYMBOL.INTTK)){
+            child1=Decl(level);
+        }else {
+            child1=Stmt(level);
         }
-        children.add(vipNode1);
+        children.add(child1);
 
-        ret.setCorrect(vipNode1.isCorrect());
-
+        ret.setCorrect(child1.isCorrect());
         children.forEach(ret::addChild);
+
         return ret;
     }
 
     private Node Stmt(int level) {
-        GUNIT curBlock = GUNIT.Stmt;
-        BranchNode ret = new BranchNode(curBlock);
+        BranchNode ret = new BranchNode(GUNIT.Stmt);
         ArrayList<Node> children = new ArrayList<>();
 
         if (peek().getSymbol().equals(SYMBOL.IFTK)) {
-            Node vipNode1 = checkSymbol(SYMBOL.IFTK);
-            children.add(vipNode1);
-            Node vipNode2 = checkSymbol(SYMBOL.LPARENT);
-            children.add(vipNode2);
-            Node vipNode3 = Cond(level);
-            children.add(vipNode3);
-            Node vipNode4 = checkSymbol(SYMBOL.RPARENT);
-            if (!vipNode4.isCorrect()) {
-//                logU4Error(Error.leftParentMissingError());
-                extractTokenFromLeafNode(vipNode4).getLine();
-            }
-            children.add(vipNode4);
-            Node vipNode5 = Stmt(level);
-            children.add(vipNode5);
+
+            Node child1 = checkSymbol(SYMBOL.IFTK);
+            children.add(child1);
+
+            Node child2 = checkSymbol(SYMBOL.LPARENT);
+            children.add(child2);
+
+            Node child3 = Cond(level);
+            children.add(child3);
+
+            Node child4 = checkSymbol(SYMBOL.RPARENT);
+            children.add(child4);
+
+            Node child5 = Stmt(level);
+            children.add(child5);
 
             if (peek().getSymbol().equals(SYMBOL.ELSETK)) {
                 Node tmp1 = checkSymbol(SYMBOL.ELSETK);
@@ -592,73 +558,65 @@ public class GrammarParser {
                 children.add(tmp2);
             }
 
-            ret.setCorrect(vipNode1.isCorrect() && vipNode2.isCorrect() && vipNode3.isCorrect() && vipNode4.isCorrect() && vipNode5.isCorrect());
+            ret.setCorrect(child1.isCorrect() && child2.isCorrect() && child3.isCorrect() && child4.isCorrect() && child5.isCorrect());
 
         } else if (peek().getSymbol().equals(SYMBOL.WHILETK)) {
-            Node vipNode1 = checkSymbol(SYMBOL.WHILETK);
-            children.add(vipNode1);
-            Node vipNode2 = checkSymbol(SYMBOL.LPARENT);
-            children.add(vipNode2);
-            Node vipNode3 = Cond(level);
-            children.add(vipNode3);
-            Node vipNode4 = checkSymbol(SYMBOL.RPARENT);
-            if (!vipNode4.isCorrect()) {
-//                logU4Error(Error.leftParentMissingError());
-                extractTokenFromLeafNode(vipNode4).getLine();
-            }
-            children.add(vipNode4);
-            Node vipNode5 = Stmt(level);
-            children.add(vipNode5);
+            Node child1 = checkSymbol(SYMBOL.WHILETK);
+            children.add(child1);
 
-            ret.setCorrect(vipNode1.isCorrect() && vipNode2.isCorrect() && vipNode3.isCorrect() && vipNode4.isCorrect() && vipNode5.isCorrect());
+            Node child2 = checkSymbol(SYMBOL.LPARENT);
+            children.add(child2);
+
+            Node child3 = Cond(level);
+            children.add(child3);
+
+            Node child4 = checkSymbol(SYMBOL.RPARENT);
+            children.add(child4);
+
+            Node child5 = Stmt(level);
+            children.add(child5);
+
+            ret.setCorrect(child1.isCorrect() && child2.isCorrect() && child3.isCorrect() && child4.isCorrect() && child5.isCorrect());
 
         } else if (peek().getSymbol().equals(SYMBOL.BREAKTK)) {
-            Node vipNode1 = checkSymbol(SYMBOL.BREAKTK);
-            children.add(vipNode1);
-            Node vipNode2 = checkSymbol(SYMBOL.SEMICN);
-            if (!vipNode2.isCorrect()) {
-//                logU4Error(Error.semiconMissingError());
-                extractTokenFromLeafNode(vipNode2).getLine();
-            }
-            children.add(vipNode2);
 
-            ret.setCorrect(vipNode1.isCorrect() && vipNode2.isCorrect());
+            Node child1 = checkSymbol(SYMBOL.BREAKTK);
+            children.add(child1);
+
+            Node child2 = checkSymbol(SYMBOL.SEMICN);
+            children.add(child2);
+
+            ret.setCorrect(child1.isCorrect() && child2.isCorrect());
         } else if (peek().getSymbol().equals(SYMBOL.CONTINUETK)) {
-            Node vipNode1 = checkSymbol(SYMBOL.CONTINUETK);
-            children.add(vipNode1);
-            Node vipNode2 = checkSymbol(SYMBOL.SEMICN);
-            if (!vipNode2.isCorrect()) {
-//                logU4Error(Error.semiconMissingError());
-                extractTokenFromLeafNode(vipNode2).getLine();
-            }
-            children.add(vipNode2);
 
-            ret.setCorrect(vipNode1.isCorrect() && vipNode2.isCorrect());
+            Node child1 = checkSymbol(SYMBOL.CONTINUETK);
+            children.add(child1);
+
+            Node child2 = checkSymbol(SYMBOL.SEMICN);
+            children.add(child2);
+
+            ret.setCorrect(child1.isCorrect() && child2.isCorrect());
         } else if (peek().getSymbol().equals(SYMBOL.RETURNTK)) {
-            Node vipNode1 = checkSymbol(SYMBOL.RETURNTK);
-            children.add(vipNode1);
+            Node child1 = checkSymbol(SYMBOL.RETURNTK);
+            children.add(child1);
 
             if (!peek().getSymbol().equals(SYMBOL.SEMICN)) {
                 Node tmp1 = Exp(level);
                 children.add(tmp1);
             }
 
-            Node vipNode2 = checkSymbol(SYMBOL.SEMICN);
-            if (!vipNode2.isCorrect()) {
-//                logU4Error(Error.semiconMissingError());
-                extractTokenFromLeafNode(vipNode2).getLine();
-            }
-            children.add(vipNode2);
+            Node child2 = checkSymbol(SYMBOL.SEMICN);
+            children.add(child2);
 
-            ret.setCorrect(vipNode1.isCorrect() && vipNode2.isCorrect());
+            ret.setCorrect(child1.isCorrect() && child2.isCorrect());
 
         } else if (peek().getSymbol().equals(SYMBOL.PRINTFTK)) {
-            Node vipNode1 = checkSymbol(SYMBOL.PRINTFTK);
-            children.add(vipNode1);
-            Node vipNode2 = checkSymbol(SYMBOL.LPARENT);
-            children.add(vipNode2);
-            Node vipNode3 = checkSymbol(SYMBOL.STRCON);
-            children.add(vipNode3);
+            Node child1 = checkSymbol(SYMBOL.PRINTFTK);
+            children.add(child1);
+            Node child2 = checkSymbol(SYMBOL.LPARENT);
+            children.add(child2);
+            Node child3 = checkSymbol(SYMBOL.STRCON);
+            children.add(child3);
 
             while (peek().getSymbol().equals(SYMBOL.COMMA)) {
                 Node tmp1 = checkSymbol(SYMBOL.COMMA);
@@ -667,64 +625,45 @@ public class GrammarParser {
                 children.add(tmp2);
             }
 
-            Node vipNode4 = checkSymbol(SYMBOL.RPARENT);
-            if (!vipNode4.isCorrect()) {
-//                logU4Error(Error.leftParentMissingError());
-                extractTokenFromLeafNode(vipNode4).getLine();
-            }
-            children.add(vipNode4);
-            Node vipNode5 = checkSymbol(SYMBOL.SEMICN);
-            if (!vipNode5.isCorrect()) {
-//                logU4Error(Error.semiconMissingError());
-                extractTokenFromLeafNode(vipNode5).getLine();
-            }
-            children.add(vipNode5);
+            Node child4 = checkSymbol(SYMBOL.RPARENT);
+            children.add(child4);
 
-            ret.setCorrect(vipNode1.isCorrect() && vipNode2.isCorrect() && vipNode3.isCorrect() && vipNode4.isCorrect() && vipNode5.isCorrect());
+            Node child5 = checkSymbol(SYMBOL.SEMICN);
+            children.add(child5);
+
+            ret.setCorrect(child1.isCorrect() && child2.isCorrect() && child3.isCorrect() && child4.isCorrect() && child5.isCorrect());
         } else if (peek().getSymbol().equals(SYMBOL.LBRACE)) {
-            Node vipNode1 = Block(level + 1);
-            children.add(vipNode1);
+            Node child1 = Block(level + 1);
+            children.add(child1);
 
-            ret.setCorrect(vipNode1.isCorrect());
+            ret.setCorrect(child1.isCorrect());
         } else if (isNextLValAndAssign()) {
-            Node vipNode1 = LVal(level);
-            children.add(vipNode1);
-            Node vipNode2 = checkSymbol(SYMBOL.ASSIGN);
-            children.add(vipNode2);
+            Node child1 = LVal(level);
+            children.add(child1);
+            Node child2 = checkSymbol(SYMBOL.ASSIGN);
+            children.add(child2);
 
             if (peek().getSymbol().equals(SYMBOL.GETINTTK)) {
-                Node vipNode3 = checkSymbol(SYMBOL.GETINTTK);
-                children.add(vipNode3);
-                Node vipNode4 = checkSymbol(SYMBOL.LPARENT);
-                children.add(vipNode4);
+                Node child3 = checkSymbol(SYMBOL.GETINTTK);
+                children.add(child3);
+                Node child4 = checkSymbol(SYMBOL.LPARENT);
+                children.add(child4);
 
-                Node vipNode5 = checkSymbol(SYMBOL.RPARENT);
-                if (!vipNode5.isCorrect()) {
-//                    logU4Error(Error.leftParentMissingError());
-                    extractTokenFromLeafNode(vipNode5).getLine();
-                }
-                children.add(vipNode5);
+                Node child5 = checkSymbol(SYMBOL.RPARENT);
+                children.add(child5);
 
-                Node vipNode6 = checkSymbol(SYMBOL.SEMICN);
-                if (!vipNode6.isCorrect()) {
-//                    logU4Error(Error.semiconMissingError());
-                    extractTokenFromLeafNode(vipNode6).getLine();
-                }
-                children.add(vipNode6);
+                Node child6 = checkSymbol(SYMBOL.SEMICN);
+                children.add(child6);
 
-                ret.setCorrect(vipNode1.isCorrect() && vipNode2.isCorrect() && vipNode3.isCorrect()
-                        && vipNode4.isCorrect() && vipNode5.isCorrect() && vipNode6.isCorrect());
+                ret.setCorrect(child1.isCorrect() && child2.isCorrect() && child3.isCorrect()
+                        && child4.isCorrect() && child5.isCorrect() && child6.isCorrect());
             } else {
-                Node vipNode3 = Exp(level);
-                children.add(vipNode3);
-                Node vipNode4 = checkSymbol(SYMBOL.SEMICN);
-                if (!vipNode4.isCorrect()) {
-//                    logU4Error(Error.semiconMissingError());
-                    extractTokenFromLeafNode(vipNode4).getLine();
-                }
-                children.add(vipNode4);
+                Node child3 = Exp(level);
+                children.add(child3);
+                Node child4 = checkSymbol(SYMBOL.SEMICN);
+                children.add(child4);
 
-                ret.setCorrect(vipNode1.isCorrect() && vipNode2.isCorrect() && vipNode3.isCorrect() && vipNode4.isCorrect());
+                ret.setCorrect(child1.isCorrect() && child2.isCorrect() && child3.isCorrect() && child4.isCorrect());
             }
 
 
@@ -733,200 +672,183 @@ public class GrammarParser {
                 Node tmp1 = Exp(level);
                 children.add(tmp1);
 
-                Node vipNode1 = checkSymbol(SYMBOL.SEMICN);
-                if (!vipNode1.isCorrect()) {
-//                    logU4Error(Error.semiconMissingError());
-                    extractTokenFromLeafNode(vipNode1).getLine();
-                }
-                children.add(vipNode1);
+                Node child1 = checkSymbol(SYMBOL.SEMICN);
+                children.add(child1);
 
-                ret.setCorrect(vipNode1.isCorrect());
+                ret.setCorrect(child1.isCorrect());
             } else {
-                Node vipNode1 = checkSymbol(SYMBOL.SEMICN);
-                if (!vipNode1.isCorrect()) {
-//                    logU4Error(Error.semiconMissingError());
-                    extractTokenFromLeafNode(vipNode1).getLine();
-                }
-                children.add(vipNode1);
+                Node child1 = checkSymbol(SYMBOL.SEMICN);
+                children.add(child1);
 
-                ret.setCorrect(vipNode1.isCorrect());
+                ret.setCorrect(child1.isCorrect());
             }
         }
 
         children.forEach(ret::addChild);
         return ret;
+
     }
 
     private Node Exp(int level) {
-        GUNIT curBlock = GUNIT.Exp;
-        BranchNode ret = new BranchNode(curBlock);
+        BranchNode ret = new BranchNode(GUNIT.Exp);
         ArrayList<Node> children = new ArrayList<>();
 
-        Node vipNode1 = AddExp(level);
-        children.add(vipNode1);
+        Node child1 = AddExp(level);
+        children.add(child1);
 
-        ret.setCorrect(vipNode1.isCorrect());
-
+        ret.setCorrect(child1.isCorrect());
         children.forEach(ret::addChild);
+
         return ret;
     }
 
     private Node Cond(int level) {
-        GUNIT curBlock = GUNIT.Cond;
-        BranchNode ret = new BranchNode(curBlock);
+
+        BranchNode ret = new BranchNode(GUNIT.Cond);
         ArrayList<Node> children = new ArrayList<>();
 
-        Node vipNode1 = LOrExp(level);
-        children.add(vipNode1);
+        Node child1 = LOrExp(level);
+        children.add(child1);
 
-        ret.setCorrect(vipNode1.isCorrect());
-
+        ret.setCorrect(child1.isCorrect());
         children.forEach(ret::addChild);
+
         return ret;
     }
 
     private Node LVal(int level) {
-        GUNIT curBlock = GUNIT.LVal;
-        BranchNode ret = new BranchNode(curBlock);
+        BranchNode ret = new BranchNode(GUNIT.LVal);
         ArrayList<Node> children = new ArrayList<>();
 
-        Node vipNode1 = checkSymbol(SYMBOL.IDENFR);
-        children.add(vipNode1);
+        Node child1 = checkSymbol(SYMBOL.IDENFR);
+        children.add(child1);
 
         while (peek().getSymbol().equals(SYMBOL.LBRACK)) {
             Node tmp1 = checkSymbol(SYMBOL.LBRACK);
             Node tmp2 = Exp(level);
             Node tmp3 = checkSymbol(SYMBOL.RBRACK);
-            if (!tmp3.isCorrect()) {
-//                logU4Error(Error.leftBraketMissingError());
-                extractTokenFromLeafNode(tmp3).getLine();
-            }
+
             children.add(tmp1);
             children.add(tmp2);
             children.add(tmp3);
         }
 
-        ret.setCorrect(vipNode1.isCorrect());
+        ret.setCorrect(child1.isCorrect());
 
         children.forEach(ret::addChild);
+
         return ret;
     }
 
     private Node PrimaryExp(int level) {
-        GUNIT curBlock = GUNIT.PrimaryExp;
-        BranchNode ret = new BranchNode(curBlock);
+        BranchNode ret = new BranchNode(GUNIT.PrimaryExp);
         ArrayList<Node> children = new ArrayList<>();
 
         if (peek().getSymbol().equals(SYMBOL.INTCON)) {
-            Node vipNode1 = Number(level);
-            children.add(vipNode1);
+            Node child1 = Number(level);
+            children.add(child1);
 
-            ret.setCorrect(vipNode1.isCorrect());
+            ret.setCorrect(child1.isCorrect());
         } else if (peek().getSymbol().equals(SYMBOL.LPARENT)) {
-            Node vipNode1 = checkSymbol(SYMBOL.LPARENT);
-            children.add(vipNode1);
-            Node vipNode2 = Exp(level);
-            children.add(vipNode2);
-            Node vipNode3 = checkSymbol(SYMBOL.RPARENT);
-            if (!vipNode3.isCorrect()) {
-//                logU4Error(Error.leftParentMissingError());
-                extractTokenFromLeafNode(vipNode3).getLine();
-            }
-            children.add(vipNode3);
+            Node child1 = checkSymbol(SYMBOL.LPARENT);
+            children.add(child1);
 
-            ret.setCorrect(vipNode1.isCorrect() && vipNode2.isCorrect() && vipNode3.isCorrect());
+            Node child2 = Exp(level);
+            children.add(child2);
+
+            Node child3 = checkSymbol(SYMBOL.RPARENT);
+            children.add(child3);
+
+            ret.setCorrect(child1.isCorrect() && child2.isCorrect() && child3.isCorrect());
         } else {
-            Node vipNode1 = LVal(level);
-            children.add(vipNode1);
+            Node child1 = LVal(level);
+            children.add(child1);
 
-            ret.setCorrect(vipNode1.isCorrect());
+            ret.setCorrect(child1.isCorrect());
         }
 
         children.forEach(ret::addChild);
         return ret;
+
     }
 
     private Node Number(int level) {
-        GUNIT curBlock = GUNIT.Number;
-        BranchNode ret = new BranchNode(curBlock);
+        BranchNode ret = new BranchNode(GUNIT.Number);
         ArrayList<Node> children = new ArrayList<>();
 
-        Node vipNode1 = checkSymbol(SYMBOL.INTCON);
-        children.add(vipNode1);
+        Node child1 = checkSymbol(SYMBOL.INTCON);
+        children.add(child1);
 
-        ret.setCorrect(vipNode1.isCorrect());
-
+        ret.setCorrect(child1.isCorrect());
         children.forEach(ret::addChild);
+
         return ret;
     }
 
     private Node UnaryExp(int level) {
-        GUNIT curBlock = GUNIT.UnaryExp;
-        BranchNode ret = new BranchNode(curBlock);
+        BranchNode ret = new BranchNode(GUNIT.UnaryExp);
         ArrayList<Node> children = new ArrayList<>();
 
         if (peek().getSymbol().equals(SYMBOL.PLUS) ||
                 peek().getSymbol().equals(SYMBOL.MINU) ||
-                peek().getSymbol().equals(SYMBOL.NOT)) {
-            Node vipNode1 = UnaryOp(level);
-            children.add(vipNode1);
-            Node vipNode2 = UnaryExp(level);
-            children.add(vipNode2);
+                peek().getSymbol().equals(SYMBOL.NOT))
+        {
+            Node child1 = UnaryOp(level);
+            children.add(child1);
 
-            ret.setCorrect(vipNode1.isCorrect() && vipNode2.isCorrect());
+            Node child2 = UnaryExp(level);
+            children.add(child2);
+
+            ret.setCorrect(child1.isCorrect() && child2.isCorrect());
         } else if (peek().getSymbol().equals(SYMBOL.IDENFR) && peek(2).getSymbol().equals(SYMBOL.LPARENT)) {
-            Node vipNode1 = checkSymbol(SYMBOL.IDENFR);
-            children.add(vipNode1);
-            Node vipNode2 = checkSymbol(SYMBOL.LPARENT);
-            children.add(vipNode2);
+            Node child1 = checkSymbol(SYMBOL.IDENFR);
+            children.add(child1);
+            Node child2 = checkSymbol(SYMBOL.LPARENT);
+            children.add(child2);
             if (isNextFuncRParams()) {
                 Node tmp1 = FuncRParams(level);
                 children.add(tmp1);
             }
 
-            Node vipNode3 = checkSymbol(SYMBOL.RPARENT);
-            if (!vipNode3.isCorrect()) {
-//                logU4Error(Error.leftParentMissingError());
-                extractTokenFromLeafNode(vipNode3).getLine();
-            }
+            Node child3 = checkSymbol(SYMBOL.RPARENT);
+            children.add(child3);
 
-            children.add(vipNode3);
+            ret.setCorrect(child1.isCorrect() && child2.isCorrect() && child3.isCorrect());
+        }
+        else
+        {
+            Node child1 = PrimaryExp(level);
+            children.add(child1);
 
-            ret.setCorrect(vipNode1.isCorrect() && vipNode2.isCorrect() && vipNode3.isCorrect());
-        } else {
-            Node vipNode1 = PrimaryExp(level);
-            children.add(vipNode1);
-
-            ret.setCorrect(vipNode1.isCorrect());
+            ret.setCorrect(child1.isCorrect());
         }
 
         children.forEach(ret::addChild);
         return ret;
+
     }
 
     private Node UnaryOp(int level) {
-        GUNIT curBlock = GUNIT.UnaryOp;
-        BranchNode ret = new BranchNode(curBlock);
+        BranchNode ret = new BranchNode(GUNIT.UnaryOp);
         ArrayList<Node> children = new ArrayList<>();
 
         SYMBOL[] bolster = {SYMBOL.PLUS, SYMBOL.MINU, SYMBOL.NOT};
 
-        Node vipNode1 = checkMultSymbol(bolster);
-        children.add(vipNode1);
+        Node child1 = checkMultSymbol(bolster);
+        children.add(child1);
 
-        ret.setCorrect(vipNode1.isCorrect());
-
+        ret.setCorrect(child1.isCorrect());
         children.forEach(ret::addChild);
+
         return ret;
     }
 
     private Node FuncRParams(int level) {
-        GUNIT curBlock = GUNIT.FuncRParams;
-        BranchNode ret = new BranchNode(curBlock);
+        BranchNode ret = new BranchNode(GUNIT.FuncRParams);
         ArrayList<Node> children = new ArrayList<>();
 
-        Node vipNode1 = Exp(level);
-        children.add(vipNode1);
+        Node child1 = Exp(level);
+        children.add(child1);
 
         while (peek().getSymbol().equals(SYMBOL.COMMA)) {
             Node tmp1 = checkSymbol(SYMBOL.COMMA);
@@ -935,38 +857,31 @@ public class GrammarParser {
             children.add(tmp2);
         }
 
-        ret.setCorrect(vipNode1.isCorrect());
+        ret.setCorrect(child1.isCorrect());
 
         children.forEach(ret::addChild);
         return ret;
+
     }
 
-    /**
-     * MulExp是一个左递归规则 MulExp -> UnaryExp | MulExp ('*'|'/'|'%') UnaryExp
-     * 改写为 MulExp -> UnaryExp {('*'|'/'|'%') UnaryExp}
-     *
-     * @param level
-     * @
-     */
+
     private Node MulExp(int level) {
-        GUNIT curBlock = GUNIT.MulExp;
+        BranchNode ret = new BranchNode(GUNIT.MulExp);
 
-        BranchNode ret = new BranchNode(curBlock);
-
-        Node vipNode1 = UnaryExp(level);
-        ret.addChild(vipNode1);
-        ret.setCorrect(vipNode1.isCorrect());
+        Node child1 = UnaryExp(level);
+        ret.addChild(child1);
+        ret.setCorrect(child1.isCorrect());
 
         while (peek().getSymbol().equals(SYMBOL.MULT) ||
                 peek().getSymbol().equals(SYMBOL.DIV) ||
                 peek().getSymbol().equals(SYMBOL.MOD)) {
 
-            BranchNode tmpBranch = new BranchNode(curBlock);
+            BranchNode tmpBranch = new BranchNode(GUNIT.MulExp);
             tmpBranch.addChild(ret);
             tmpBranch.setCorrect(ret.isCorrect());
             ret = tmpBranch;
 
-            Node tmp1 = pureMulOp(level);
+            Node tmp1 = pureMulOp();
             Node tmp2 = UnaryExp(level);
 
             ret.addChild(tmp1);
@@ -976,31 +891,24 @@ public class GrammarParser {
         return ret;
     }
 
-    /**
-     * AddExp是一个左递归规则 AddExp -> MulExp | AddExp ('+'|'-') MulExp
-     * 改写为AddExp -> MulExp {('+'|'-') MulExp}
-     *
-     * @param level
-     * @
-     */
     private Node AddExp(int level) {
-        GUNIT curBlock = GUNIT.AddExp;
+        BranchNode ret = new BranchNode(GUNIT.AddExp);
+        ArrayList<Node> children = new ArrayList<>();
 
-        BranchNode ret = new BranchNode(curBlock);
-
-        Node vipNode1 = MulExp(level);
-        ret.addChild(vipNode1);
-        ret.setCorrect(vipNode1.isCorrect());
+        Node child1 = MulExp(level);
+        children.add(child1);
+        ret.setCorrect(child1.isCorrect());
+        children.forEach(ret::addChild);
 
         while (peek().getSymbol().equals(SYMBOL.PLUS) ||
                 peek().getSymbol().equals(SYMBOL.MINU)) {
 
-            BranchNode tmpBranch = new BranchNode(curBlock);
+            BranchNode tmpBranch = new BranchNode(GUNIT.AddExp);
             tmpBranch.addChild(ret);
             tmpBranch.setCorrect(ret.isCorrect());
             ret = tmpBranch;
 
-            Node tmp1 = pureAddOp(level);
+            Node tmp1 = pureAddOp();
             Node tmp2 = MulExp(level);
 
             ret.addChild(tmp1);
@@ -1010,29 +918,22 @@ public class GrammarParser {
         return ret;
     }
 
-    /**
-     * RelExp -> AddExp | RelExp ('<' | '>' | '<=' | '>=') AddExp是左递归规则
-     * 转变为 RelExp -> AddExp { ('<' | '>' | '<=' | '>=') AddExp}
-     */
+
     private Node RelExp(int level) {
-        GUNIT curBlock = GUNIT.RelExp;
+        BranchNode ret = new BranchNode(GUNIT.RelExp);
 
-        BranchNode ret = new BranchNode(curBlock);
+        Node child1 = AddExp(level);
+        ret.addChild(child1);
+        ret.setCorrect(child1.isCorrect());
 
-        Node vipNode1 = AddExp(level);
-        ret.addChild(vipNode1);
-        ret.setCorrect(vipNode1.isCorrect());
-
-        while (peek().getSymbol().equals(SYMBOL.LEQ) ||
-                peek().getSymbol().equals(SYMBOL.LSS) ||
-                peek().getSymbol().equals(SYMBOL.GEQ) ||
+        while (peek().getSymbol().equals(SYMBOL.LEQ) || peek().getSymbol().equals(SYMBOL.LSS) || peek().getSymbol().equals(SYMBOL.GEQ) ||
                 peek().getSymbol().equals(SYMBOL.GRE)) {
-            BranchNode tmpBranch = new BranchNode(curBlock);
+            BranchNode tmpBranch = new BranchNode(GUNIT.RelExp);
             tmpBranch.addChild(ret);
             tmpBranch.setCorrect(ret.isCorrect());
             ret = tmpBranch;
 
-            Node tmp1 = pureCompareOp(level);
+            Node tmp1 = pureCompareOp();
             Node tmp2 = AddExp(level);
 
             ret.addChild(tmp1);
@@ -1040,29 +941,25 @@ public class GrammarParser {
         }
 
         return ret;
+
     }
 
-    /**
-     * EqExp -> RelExp | EqExp ('==' | '!=') RelExp 左递归
-     * 改为 EqExp -> RelExp {  ('==' | '!=') RelExp }
-     */
+
     private Node EqExp(int level) {
-        GUNIT curBlock = GUNIT.EqExp;
+        BranchNode ret = new BranchNode(GUNIT.EqExp);
 
-        BranchNode ret = new BranchNode(curBlock);
-
-        Node vipNode1 = RelExp(level);
-        ret.addChild(vipNode1);
-        ret.setCorrect(vipNode1.isCorrect());
+        Node child1 = RelExp(level);
+        ret.addChild(child1);
+        ret.setCorrect(child1.isCorrect());
 
         while (peek().getSymbol().equals(SYMBOL.EQL) ||
                 peek().getSymbol().equals(SYMBOL.NEQ)) {
-            BranchNode tmpBranch = new BranchNode(curBlock);
+            BranchNode tmpBranch = new BranchNode(GUNIT.EqExp);
             tmpBranch.addChild(ret);
             tmpBranch.setCorrect(ret.isCorrect());
             ret = tmpBranch;
 
-            Node tmp1 = pureEquOp(level);
+            Node tmp1 = pureEquOp();
             Node tmp2 = RelExp(level);
 
             ret.addChild(tmp1);
@@ -1070,26 +967,20 @@ public class GrammarParser {
         }
 
         return ret;
+
     }
 
-    /**
-     * LAndExp → EqExp | LAndExp '&&' EqExp 左递归
-     * 改为 LAndExp → EqExp { '&&' EqExp }
-     *
-     * @param level
-     * @
-     */
+
     private Node LAndExp(int level) {
-        GUNIT curBlock = GUNIT.LAndExp;
 
-        BranchNode ret = new BranchNode(curBlock);
+        BranchNode ret = new BranchNode(GUNIT.LAndExp);
 
-        Node vipNode1 = EqExp(level);
-        ret.addChild(vipNode1);
-        ret.setCorrect(vipNode1.isCorrect());
+        Node child1 = EqExp(level);
+        ret.addChild(child1);
+        ret.setCorrect(child1.isCorrect());
 
         while (peek().getSymbol().equals(SYMBOL.AND)) {
-            BranchNode tmpBranch = new BranchNode(curBlock);
+            BranchNode tmpBranch = new BranchNode(GUNIT.LAndExp);
             tmpBranch.addChild(ret);
             tmpBranch.setCorrect(ret.isCorrect());
             ret = tmpBranch;
@@ -1102,26 +993,19 @@ public class GrammarParser {
         }
 
         return ret;
+
     }
 
-    /**
-     * LOrExp → LAndExp | LOrExp '||' LAndExp 左递归
-     * 改为 LOrExp -> LAndExp { '||' LAndExp }
-     *
-     * @param level
-     * @
-     */
+
     private Node LOrExp(int level) {
-        GUNIT curBlock = GUNIT.LOrExp;
+        BranchNode ret = new BranchNode(GUNIT.LOrExp);
 
-        BranchNode ret = new BranchNode(curBlock);
-
-        Node vipNode1 = LAndExp(level);
-        ret.addChild(vipNode1);
-        ret.setCorrect(vipNode1.isCorrect());
+        Node child1 = LAndExp(level);
+        ret.addChild(child1);
+        ret.setCorrect(child1.isCorrect());
 
         while (peek().getSymbol().equals(SYMBOL.OR)) {
-            BranchNode tmpBranch = new BranchNode(curBlock);
+            BranchNode tmpBranch = new BranchNode(GUNIT.LOrExp);
             tmpBranch.addChild(ret);
             tmpBranch.setCorrect(ret.isCorrect());
             ret = tmpBranch;
@@ -1134,22 +1018,22 @@ public class GrammarParser {
         }
 
         return ret;
+
     }
 
     private Node ConstExp(int level) {
-        GUNIT curBlock = GUNIT.ConstExp;
-        BranchNode ret = new BranchNode(curBlock);
+        BranchNode ret = new BranchNode(GUNIT.ConstExp);
         ArrayList<Node> children = new ArrayList<>();
 
-        Node vipNode1 = AddExp(level);
-        children.add(vipNode1);
+        Node child1=AddExp(level);
+        children.add(child1);
 
-        ret.setCorrect(vipNode1.isCorrect());
-
+        ret.setCorrect(child1.isCorrect());
         children.forEach(ret::addChild);
+
         return ret;
     }
-
+//    四个用于检测是否存在的函数
     private Boolean isNextExpAndSemicon() {
         int pTokenMark = pToken;
         Node trial = Exp(-1);
@@ -1162,6 +1046,7 @@ public class GrammarParser {
         //  如果查到了Exp，但是Exp由于缺失中括号呈现false，此时分号一定正确，因此返回正确
         //  如果查到Exp但是缺失分号，此时Exp一定正确，因此返回正确
         return trial.isCorrect() || semicn.isCorrect();
+
     }
 
     private Boolean isNextLValAndAssign() {
@@ -1172,6 +1057,7 @@ public class GrammarParser {
         //  如果跨过LVal检测到=号，返回正确
         //  LVal的正确性或存在性（目前不可能不存在）不影响正确性
         return assign.isCorrect();
+
     }
 
     private Boolean isNextFuncRParams() {
@@ -1189,9 +1075,9 @@ public class GrammarParser {
             return false;
         }
         pToken = pTokenMark;
-        //  FuncFParams由于缺失中括号而呈现错误，但是显然检测到了
-        //  如果FuncFParams确实缺失中括号，那么后一个符号一定是右括号，因为错误不会发生在同一行
+
         return true;
+
     }
 
 

@@ -114,7 +114,7 @@ public class Lexparser {
 //                       System.out.println(token.getToken("||") + " ||" );
                         String ideout = tokens.getToken("||") + " ||" + "\n";
 
-                        Token curtoken = new Token(SYMBOL.valueOf(tokens.getToken(stringBuilder.toString())),"||",lineNumber);
+                        Token curtoken = new Token(SYMBOL.valueOf(tokens.getToken("||")),"||",lineNumber);
                         this.TokenList.add(curtoken);
                         //fw.close();
                     }
