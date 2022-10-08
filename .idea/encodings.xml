@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="Encoding">
-    <file url="file://$PROJECT_DIR$/参考1.cpp" charset="GBK" />
-    <file url="file://$PROJECT_DIR$/../../../STUDY!/!/编译实验/词法分析/参考1.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/词法分析参考/参考1.cpp" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/../../../STUDY!/!/编译实验/编译器/参考1.cpp" charset="GBK" />
     <file url="file://$PROJECT_DIR$/../../../STUDY/!/!/编译实验/词法分析/参考1.cpp" charset="GBK" />
   </component>
 </project>
