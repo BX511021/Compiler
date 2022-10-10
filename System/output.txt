@@ -1,3 +1,47 @@
+CONSTTK const
+INTTK int
+IDENFR a
+ASSIGN =
+INTCON 6
+<Number>
+<PrimaryExp>
+<UnaryExp>
+<MulExp>
+<AddExp>
+<ConstExp>
+<ConstInitVal>
+<ConstDef>
+SEMICN ;
+<ConstDecl>
+VOIDTK void
+<FuncType>
+IDENFR func
+LPARENT (
+INTTK int
+IDENFR a
+<FuncFParam>
+COMMA ,
+INTTK int
+IDENFR b
+<FuncFParam>
+<FuncFParams>
+RPARENT )
+LBRACE {
+IDENFR a
+<LVal>
+ASSIGN =
+INTCON 5
+<Number>
+<PrimaryExp>
+<UnaryExp>
+<MulExp>
+<AddExp>
+<Exp>
+SEMICN ;
+<Stmt>
+RBRACE }
+<Block>
+<FuncDef>
 INTTK int
 MAINTK main
 LPARENT (
@@ -5,6 +49,9 @@ RPARENT )
 LBRACE {
 INTTK int
 IDENFR x
+<VarDef>
+COMMA ,
+IDENFR y
 <VarDef>
 SEMICN ;
 <VarDecl>
@@ -16,9 +63,34 @@ LPARENT (
 RPARENT )
 SEMICN ;
 <Stmt>
+IDENFR func
+LPARENT (
+IDENFR y
+<LVal>
+<PrimaryExp>
+<UnaryExp>
+<MulExp>
+<AddExp>
+<Exp>
+COMMA ,
+IDENFR x
+<LVal>
+<PrimaryExp>
+<UnaryExp>
+<MulExp>
+<AddExp>
+<Exp>
+<FuncRParams>
+RPARENT )
+<UnaryExp>
+<MulExp>
+<AddExp>
+<Exp>
+SEMICN ;
+<Stmt>
 PRINTFTK printf
 LPARENT (
-STRCON "%d"
+STRCON "%d+1"
 COMMA ,
 IDENFR x
 <LVal>

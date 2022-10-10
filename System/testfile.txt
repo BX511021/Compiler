@@ -1,6 +1,13 @@
-int main(){
-    int x;
+Const iNt a = 6;
+void func(int a,int b){
+    a=5;
+
+}
+
+Int main(){
+    int x,y;
     x= getint();
-    printf("%d",x);
+    func(y,x);
+    printf("%d+1",x);
     return x;
 }

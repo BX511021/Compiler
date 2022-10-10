@@ -69,7 +69,6 @@ public class GrammarParser {
             return new LeafNode(symbols[0], preToken(), false);
         } else {
             next();
-//            System.out.println("check pass");
             return new LeafNode(getCurToken().getSymbol(), getCurToken(), true);
         }
 
@@ -106,7 +105,8 @@ public class GrammarParser {
         SYMBOL[] bolster = {SYMBOL.PLUS, SYMBOL.MINU};
         return checkMultSymbol(bolster);
     }
-//入口函数
+
+    //入口函数
     private void postorderTraversal(Node root) {
         if (root instanceof BranchNode) {
             ArrayList<Node> children = root.getChildren();
@@ -464,7 +464,7 @@ public class GrammarParser {
         children.add(child1);
 
         Node child2 = checkSymbol(SYMBOL.IDENFR);
-        children.add(child1);
+        children.add(child2);
 
         if (peek().getSymbol().equals(SYMBOL.LBRACK)) {
             Node tmp1 = checkSymbol(SYMBOL.LBRACK);
@@ -499,7 +499,7 @@ public class GrammarParser {
         children.add(child1);
 
         while (!peek().getSymbol().equals(SYMBOL.RBRACE)) {
-            Node tmp1 = BlockItem(level + 1);
+            Node tmp1 = BlockItem(level+1);
             children.add(tmp1);
         }
 
@@ -633,7 +633,7 @@ public class GrammarParser {
 
             ret.setCorrect(child1.isCorrect() && child2.isCorrect() && child3.isCorrect() && child4.isCorrect() && child5.isCorrect());
         } else if (peek().getSymbol().equals(SYMBOL.LBRACE)) {
-            Node child1 = Block(level + 1);
+            Node child1 = Block(level+1);
             children.add(child1);
 
             ret.setCorrect(child1.isCorrect());

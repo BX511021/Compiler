@@ -50,8 +50,8 @@ public class Compiler {
         tokenArrayList=lexparser.TokenList;
 
 //        for (Token toekn:tokenArrayList) {
-////            fw.write(toekn.getSymbol()+" "+toekn.getValue()+"\n");
-////            fw.flush();
+//            fw.write(toekn.getSymbol()+" "+toekn.getValue()+"\n");
+//            fw.flush();
 //            System.out.println(toekn.getSymbol()+" " +toekn.getValue()+" "+toekn.getLine());
 //
 //        }

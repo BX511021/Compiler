@@ -3,6 +3,7 @@ package Token;
 import Node.SYMBOL;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 public  class TokenS {
@@ -51,6 +52,7 @@ public  class TokenS {
     }
 
     public String getToken(String keyName) {
+        String keyname1=keyName.toLowerCase();
         String ID = this.dick.get(keyName);
         return ID;
     }
