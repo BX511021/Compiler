@@ -1,6 +1,8 @@
 import Node.SYMBOL;
 import Token.Token;
 import Token.TokenS;
+import global.Errorpart.ErrorLog;
+
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -61,8 +63,9 @@ public class Compiler {
 
         GrammarParser grammarParser=new GrammarParser(tokenArrayList);
         String outputFile=grammarParser.parse();
-        fw.write(outputFile);
-        fw.flush();
+//        fw.write(outputFile);
+//        fw.flush();
+        ErrorLog.DumpError();
 
         return;
 

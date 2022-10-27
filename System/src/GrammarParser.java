@@ -1,8 +1,9 @@
+import global.Errorpart.ErrorLog;
 import Node.SYMBOL;
 import Token.*;
 import Node.*;
+import global.Errorpart.ErrorType;
 
-import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,6 +17,10 @@ public class GrammarParser {
         this.pToken = -1;
         this.stringBuilder= new StringBuilder("");
 
+    }
+
+    private void FindError(String message) {
+            ErrorLog.ErrorLogadd(message);
     }
 
     private Token peek() {
@@ -53,6 +58,14 @@ public class GrammarParser {
         } catch (IndexOutOfBoundsException e) {
             return new Token(SYMBOL.UNKNOWN, "ENDVALUE", Integer.MAX_VALUE);
         }
+    }
+
+    private Token extractTokenFromLeafNode(Node node) {
+        if(!(node instanceof LeafNode)) {
+            ErrorType.warning("can't extract token from a non-leaf node");
+            return null;
+        }
+        return ((LeafNode)node).getToken();
     }
 
     /* 非终结符检查函数 */
@@ -190,6 +203,9 @@ public class GrammarParser {
         }
 
         Node child4 = checkSymbol(SYMBOL.SEMICN);
+        if (!child4.isCorrect()) {
+            FindError(ErrorType.semiconMissingError(extractTokenFromLeafNode(child4).getLine()));
+        }
         children.add(child4);
 
         ret.setCorrect(child1.isCorrect()&&child2.isCorrect()&&child3.isCorrect()&&child4.isCorrect());
@@ -221,6 +237,9 @@ public class GrammarParser {
             Node tmp1 = checkSymbol(SYMBOL.LBRACK);
             Node tmp2 = ConstExp(level);
             Node tmp3 = checkSymbol(SYMBOL.RBRACK);
+            if (!tmp3.isCorrect()) {
+                FindError(ErrorType.leftBraketMissingError(extractTokenFromLeafNode(tmp3).getLine()));
+            }
             children.add(tmp1);
             children.add(tmp2);
             children.add(tmp3);
@@ -290,6 +309,9 @@ public class GrammarParser {
         }
 
         Node child3 = checkSymbol(SYMBOL.SEMICN);
+        if (!child3.isCorrect()) {
+            FindError(ErrorType.semiconMissingError(extractTokenFromLeafNode(child3).getLine()));
+        }
         children.add(child3);
 
         ret.setCorrect(child1.isCorrect()&&child2.isCorrect()&&child3.isCorrect());
@@ -310,6 +332,10 @@ public class GrammarParser {
             Node temp1 = checkSymbol(SYMBOL.LBRACK);
             Node temp2 = ConstExp(level);
             Node temp3 = checkSymbol(SYMBOL.RBRACK);
+
+            if (!temp3.isCorrect()) {
+                FindError(ErrorType.leftBraketMissingError(extractTokenFromLeafNode(temp3).getLine()));
+            }
 
             children.add(temp1);
             children.add(temp2);
@@ -384,6 +410,11 @@ public class GrammarParser {
         }
 
         Node child5 = checkSymbol(SYMBOL.RPARENT);
+
+        if (!child5.isCorrect()) {
+            FindError(ErrorType.leftParentMissingError(extractTokenFromLeafNode(child5).getLine()));
+        }
+
         children.add(child5);
 
         Node child6 = Block(level+1);
@@ -410,6 +441,11 @@ public class GrammarParser {
         children.add(child3);
 
         Node child4 =checkSymbol(SYMBOL.RPARENT);
+
+
+        if (!child4.isCorrect()) {
+            FindError(ErrorType.leftParentMissingError(extractTokenFromLeafNode(child4).getLine()));
+        }
         children.add(child4);
 
         Node child5 =Block(level+1);
@@ -470,6 +506,10 @@ public class GrammarParser {
             Node tmp1 = checkSymbol(SYMBOL.LBRACK);
             Node tmp2 = checkSymbol(SYMBOL.RBRACK);
 
+            if (!tmp2.isCorrect()) {
+                FindError(ErrorType.leftBraketMissingError(extractTokenFromLeafNode(tmp2).getLine()));
+            }
+
             children.add(tmp1);
             children.add(tmp2);
 
@@ -477,6 +517,10 @@ public class GrammarParser {
                 Node tmp3 = checkSymbol(SYMBOL.LBRACK);
                 Node tmp4 = ConstExp(level);
                 Node tmp5 = checkSymbol(SYMBOL.RBRACK);
+
+                if (!tmp5.isCorrect()) {
+                    FindError(ErrorType.leftBraketMissingError(extractTokenFromLeafNode(tmp5).getLine()));
+                }
 
                 children.add(tmp3);
                 children.add(tmp4);
@@ -546,6 +590,9 @@ public class GrammarParser {
             children.add(child3);
 
             Node child4 = checkSymbol(SYMBOL.RPARENT);
+            if (!child4.isCorrect()) {
+                FindError(ErrorType.leftParentMissingError(extractTokenFromLeafNode(child4).getLine()));
+            }
             children.add(child4);
 
             Node child5 = Stmt(level);
@@ -571,6 +618,9 @@ public class GrammarParser {
             children.add(child3);
 
             Node child4 = checkSymbol(SYMBOL.RPARENT);
+            if (!child4.isCorrect()) {
+                FindError(ErrorType.leftParentMissingError(extractTokenFromLeafNode(child4).getLine()));
+            }
             children.add(child4);
 
             Node child5 = Stmt(level);
@@ -584,6 +634,9 @@ public class GrammarParser {
             children.add(child1);
 
             Node child2 = checkSymbol(SYMBOL.SEMICN);
+            if (!child2.isCorrect()) {
+                FindError(ErrorType.semiconMissingError(extractTokenFromLeafNode(child2).getLine()));
+            }
             children.add(child2);
 
             ret.setCorrect(child1.isCorrect() && child2.isCorrect());
@@ -593,6 +646,9 @@ public class GrammarParser {
             children.add(child1);
 
             Node child2 = checkSymbol(SYMBOL.SEMICN);
+            if (!child2.isCorrect()) {
+                FindError(ErrorType.semiconMissingError(extractTokenFromLeafNode(child2).getLine()));
+            }
             children.add(child2);
 
             ret.setCorrect(child1.isCorrect() && child2.isCorrect());
@@ -606,6 +662,9 @@ public class GrammarParser {
             }
 
             Node child2 = checkSymbol(SYMBOL.SEMICN);
+            if (!child2.isCorrect()) {
+                FindError(ErrorType.semiconMissingError(extractTokenFromLeafNode(child2).getLine()));
+            }
             children.add(child2);
 
             ret.setCorrect(child1.isCorrect() && child2.isCorrect());
@@ -626,9 +685,15 @@ public class GrammarParser {
             }
 
             Node child4 = checkSymbol(SYMBOL.RPARENT);
+            if (!child4.isCorrect()) {
+                FindError(ErrorType.leftParentMissingError(extractTokenFromLeafNode(child4).getLine()));
+            }
             children.add(child4);
 
             Node child5 = checkSymbol(SYMBOL.SEMICN);
+            if (!child5.isCorrect()) {
+                FindError(ErrorType.semiconMissingError(extractTokenFromLeafNode(child5).getLine()));
+            }
             children.add(child5);
 
             ret.setCorrect(child1.isCorrect() && child2.isCorrect() && child3.isCorrect() && child4.isCorrect() && child5.isCorrect());
@@ -650,9 +715,15 @@ public class GrammarParser {
                 children.add(child4);
 
                 Node child5 = checkSymbol(SYMBOL.RPARENT);
+                if (!child5.isCorrect()) {
+                    FindError(ErrorType.leftParentMissingError(extractTokenFromLeafNode(child5).getLine()));
+                }
                 children.add(child5);
 
                 Node child6 = checkSymbol(SYMBOL.SEMICN);
+                if (!child6.isCorrect()) {
+                    FindError(ErrorType.semiconMissingError(extractTokenFromLeafNode(child6).getLine()));
+                }
                 children.add(child6);
 
                 ret.setCorrect(child1.isCorrect() && child2.isCorrect() && child3.isCorrect()
@@ -661,6 +732,9 @@ public class GrammarParser {
                 Node child3 = Exp(level);
                 children.add(child3);
                 Node child4 = checkSymbol(SYMBOL.SEMICN);
+                if (!child4.isCorrect()) {
+                    FindError(ErrorType.semiconMissingError(extractTokenFromLeafNode(child4).getLine()));
+                }
                 children.add(child4);
 
                 ret.setCorrect(child1.isCorrect() && child2.isCorrect() && child3.isCorrect() && child4.isCorrect());
@@ -673,11 +747,17 @@ public class GrammarParser {
                 children.add(tmp1);
 
                 Node child1 = checkSymbol(SYMBOL.SEMICN);
+                if (!child1.isCorrect()) {
+                    FindError(ErrorType.semiconMissingError(extractTokenFromLeafNode(child1).getLine()));
+                }
                 children.add(child1);
 
                 ret.setCorrect(child1.isCorrect());
             } else {
                 Node child1 = checkSymbol(SYMBOL.SEMICN);
+                if (!child1.isCorrect()) {
+                    FindError(ErrorType.semiconMissingError(extractTokenFromLeafNode(child1).getLine()));
+                }
                 children.add(child1);
 
                 ret.setCorrect(child1.isCorrect());
@@ -727,6 +807,9 @@ public class GrammarParser {
             Node tmp1 = checkSymbol(SYMBOL.LBRACK);
             Node tmp2 = Exp(level);
             Node tmp3 = checkSymbol(SYMBOL.RBRACK);
+            if (!tmp3.isCorrect()) {
+                FindError(ErrorType.leftBraketMissingError(extractTokenFromLeafNode(tmp3).getLine()));
+            }
 
             children.add(tmp1);
             children.add(tmp2);
@@ -757,6 +840,9 @@ public class GrammarParser {
             children.add(child2);
 
             Node child3 = checkSymbol(SYMBOL.RPARENT);
+            if (!child3.isCorrect()) {
+                FindError(ErrorType.leftParentMissingError(extractTokenFromLeafNode(child3).getLine()));
+            }
             children.add(child3);
 
             ret.setCorrect(child1.isCorrect() && child2.isCorrect() && child3.isCorrect());
@@ -811,6 +897,9 @@ public class GrammarParser {
             }
 
             Node child3 = checkSymbol(SYMBOL.RPARENT);
+            if (!child3.isCorrect()) {
+                FindError(ErrorType.leftParentMissingError(extractTokenFromLeafNode(child3).getLine()));
+            }
             children.add(child3);
 
             ret.setCorrect(child1.isCorrect() && child2.isCorrect() && child3.isCorrect());

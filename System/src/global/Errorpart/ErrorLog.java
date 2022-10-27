@@ -1,16 +1,16 @@
-package Errorpart;
+package global.Errorpart;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 
 public class ErrorLog {
-    private ArrayList<ErrorMessage> Errors;
+    static private ArrayList<ErrorMessage> Errors=new ArrayList<>();
 
     public ErrorLog(ArrayList<ErrorMessage> errors) {
         Errors = errors;
     }
 
-    class ErrorMessage {
+    static class ErrorMessage {
         Integer line;
         String message;
 
@@ -21,12 +21,12 @@ public class ErrorLog {
         }
     }
 
-    public void ErrorLogadd(String string) {
+    public static void ErrorLogadd(String string) {
         Integer line = Integer.valueOf(string.split(" ")[0]);
-        this.Errors.add(new ErrorMessage(line, string));
+        Errors.add(new ErrorMessage(line, string));
     }
 
-    public void DumpError() {
+    public static void DumpError() {
         Errors.sort(new Comparator<ErrorMessage>() {
             @Override
             public int compare(ErrorMessage o1, ErrorMessage o2) {
@@ -45,7 +45,7 @@ public class ErrorLog {
                 }
             }
             try {
-                System.out.println(message.message+"\n");
+                System.out.println(message.message);
             } catch (Exception e) {
                 e.printStackTrace();
             }

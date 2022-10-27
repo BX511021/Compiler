@@ -1,13 +1,12 @@
-const int a = 6;
-void func(int a,int b){
-    a=5;
-
-}
-
+const int a = 4
+const int a[1][2;
 int main(){
-    int x,y;
-    x= getint();
-    func(y,x);
-    printf("%d+1",x);
-    return x;
+    int a[1][2
+    int b;
+    int i;
+    if(b<1){
+        return
+    }
+
+    return 23
 }
