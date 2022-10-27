@@ -1,10 +1,10 @@
-Const iNt a = 6;
+const int a = 6;
 void func(int a,int b){
     a=5;
 
 }
 
-Int main(){
+int main(){
     int x,y;
     x= getint();
     func(y,x);

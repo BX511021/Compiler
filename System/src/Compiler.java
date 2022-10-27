@@ -16,15 +16,19 @@ public class Compiler {
 
         File in = new File("System/testfile.txt");
         File out = new File("System/output.txt");
+        File error = new File("System/error.txt");
 
         FileInputStream input = new FileInputStream(in);
         FileOutputStream output = new FileOutputStream(out);
+        FileOutputStream errorput = new FileOutputStream(error);
 
         InputStreamReader isr = new InputStreamReader(input, StandardCharsets.UTF_8);
         OutputStreamWriter osr = new OutputStreamWriter(output, StandardCharsets.UTF_8);
+        OutputStreamWriter esr = new OutputStreamWriter(errorput, StandardCharsets.UTF_8);
 
         BufferedReader br = new BufferedReader(isr);
         BufferedWriter bw = new BufferedWriter(osr);
+        BufferedWriter be = new BufferedWriter(esr);
 
         FileWriter fw = new FileWriter(out);
         String inline = null;
@@ -41,7 +45,6 @@ public class Compiler {
             number++;
             if (inline.length() != 0) {
                 int len = inline.length();
-
                 lexparser.LexParser(inline, tokens,number);
             }
 
