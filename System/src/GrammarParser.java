@@ -10,12 +10,12 @@ import java.util.List;
 public class GrammarParser {
     private final List<Token> tokenList;
     private Integer pToken;
-    public StringBuilder stringBuilder;
+    public static StringBuilder stringBuilder;
 
     public GrammarParser(List<Token> tokenList) {
         this.tokenList = tokenList;
         this.pToken = -1;
-        this.stringBuilder= new StringBuilder("");
+        stringBuilder= new StringBuilder("");
 
     }
 
@@ -129,18 +129,22 @@ public class GrammarParser {
             GUNIT type = ((BranchNode) root).getGUnit();
             if (!type.equals(GUNIT.BlockItem) && !type.equals(GUNIT.BType) && !type.equals(GUNIT.Decl)) {
 //                System.out.println("<" + type + ">");
-                this.stringBuilder.append("<").append(type).append(">\n");
+                stringBuilder.append("<").append(type).append(">\n");
             }
         } else if (root instanceof LeafNode) {
 //            System.out.println(((LeafNode) root).getType().toString() + " " + ((LeafNode) root).getToken().getValue());
-            this.stringBuilder.append(((LeafNode) root).getType().toString()).append(" ").append(((LeafNode) root).getToken().getValue()).append("\n");
+            stringBuilder.append(((LeafNode) root).getType().toString()).append(" ").append(((LeafNode) root).getToken().getValue()).append("\n");
 
         }
     }
 
-    public String parse() {
+    public Node seed() {
         Node root = CompUnit(0);
         postorderTraversal(root);
+        return root ;
+    }
+
+    public String grammar(){
         return stringBuilder.toString();
     }
 //    编译单元解析函数

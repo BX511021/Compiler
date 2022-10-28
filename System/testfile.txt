@@ -1,12 +1,11 @@
-const int a = 4
-const int a[1][2;
+
 int main(){
-    int a[1][2
+    int a[1][2];
     int b;
     int i;
-    if(b<1){
-        return
+    if(b<2){
+        return;
     }
 
-    return 23
+    return 23;
 }

@@ -1,3 +1,4 @@
+import Node.Node;
 import Node.SYMBOL;
 import Token.Token;
 import Token.TokenS;
@@ -62,7 +63,9 @@ public class Compiler {
 //        }
 
         GrammarParser grammarParser=new GrammarParser(tokenArrayList);
-        String outputFile=grammarParser.parse();
+        Node seed = grammarParser.seed();
+        String outputFile=grammarParser.grammar();
+        System.out.println(outputFile);
 //        fw.write(outputFile);
 //        fw.flush();
         ErrorLog.DumpError();
