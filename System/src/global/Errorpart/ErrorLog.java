@@ -1,5 +1,6 @@
 package global.Errorpart;
 
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Comparator;
 
@@ -26,7 +27,7 @@ public class ErrorLog {
         Errors.add(new ErrorMessage(line, string));
     }
 
-    public static void DumpError() {
+    public static void DumpError(FileWriter ew) {
         Errors.sort(new Comparator<ErrorMessage>() {
             @Override
             public int compare(ErrorMessage o1, ErrorMessage o2) {
@@ -45,6 +46,8 @@ public class ErrorLog {
                 }
             }
             try {
+                ew.write(message.message+"\n");
+                ew.flush();
                 System.out.println(message.message);
             } catch (Exception e) {
                 e.printStackTrace();

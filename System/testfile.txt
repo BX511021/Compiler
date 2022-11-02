@@ -1,11 +1,17 @@
-
+int change1;
+int gets1(int var1,int var2){
+   int const1 = 999;
+   change1 = var1 + var2;
+   return (change1);
+}
 int main(){
-    int a[1][2];
-    int b;
-    int i;
-    if(b<2){
-        return;
+    int j=1;
+    if(j==1){
+        int i = 0;
+        j=2;
+    }else{
+        int a = 0;
     }
-
-    return 23;
+   printf("Hello World");
+   return 0;
 }

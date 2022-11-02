@@ -1,12 +1,7 @@
 package symboltable;
-
-
 import exceptions.DuplicatedDefineException;
-
-
 import global.Errorpart.ErrorType;
 import symboltable.symbols.*;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -222,6 +217,7 @@ public class Block {
 
     public void toLog() {
         for (SymbolItemType key : this.items.keySet()) {
+            System.out.println(this.name+" "+this.type+" "+this.hasReturn);
             ArrayList<SymbolItem> items = this.items.get(key);
             for (SymbolItem item : items) {
                 StringBuilder line = new StringBuilder();

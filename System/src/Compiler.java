@@ -38,6 +38,11 @@ public class Compiler {
         fw.write("");
         fw.flush();
 
+        FileWriter ew = new FileWriter(error);
+        String inline2 = null;
+        ew.write("");
+        ew.flush();
+
     /*
         利用词法分析解析原本的程序，记录token以及行数，储存在一个arrayList里面
 
@@ -66,9 +71,11 @@ public class Compiler {
         Node seed = grammarParser.seed();
         String outputFile=grammarParser.grammar();
         System.out.println(outputFile);
-//        fw.write(outputFile);
-//        fw.flush();
-        ErrorLog.DumpError();
+        fw.write(outputFile);
+        fw.flush();
+        Visitor visitor=new Visitor(seed);
+        visitor.visit();
+        ErrorLog.DumpError(ew);
 
         return;
 

@@ -5,7 +5,7 @@ import global.Errorpart.ErrorLog;
 import java.util.ArrayList;
 
 public class Symbolpart {
-    public   static  ArrayList<String> Sybmbols;
+    public   static  ArrayList<String> Sybmbols =new ArrayList<>();
 
     public static void SymbolLog(String str) {
         try {
