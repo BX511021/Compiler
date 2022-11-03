@@ -1,6 +1,6 @@
 package datatype;
 
-import global.Errorpart.ErrorType;
+import ErrorPart.ErrorType;
 
 public class VoidType implements Datatype {
 

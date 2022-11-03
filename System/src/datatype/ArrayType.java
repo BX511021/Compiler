@@ -1,6 +1,6 @@
 package datatype;
 
-import global.Errorpart.ErrorType;
+import ErrorPart.ErrorType;
 
 import java.util.ArrayList;
 import java.util.Objects;

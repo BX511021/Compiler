@@ -1,6 +1,6 @@
 package symbolstruct;
 
-import global.Errorpart.ErrorType;
+import ErrorPart.ErrorType;
 import symbolstruct.entries.AbsVarEntry;
 import symbolstruct.entries.Entry;
 import symbolstruct.entries.FuncEntry;

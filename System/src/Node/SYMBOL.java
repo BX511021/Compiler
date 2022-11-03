@@ -1,6 +1,6 @@
 package Node;
 /**
- * component.SYMBOL 词法类型枚举类
+ * convert.component.SYMBOL 词法类型枚举类
  *
  * @author neumy
  * @version jdk1.8.0

@@ -1,7 +1,7 @@
 package symboltable.symbols;
 
 
-import global.Errorpart.ErrorType;
+import ErrorPart.ErrorType;
 import symboltable.BasicType;
 import symboltable.Block;
 import symboltable.SymbolItemType;

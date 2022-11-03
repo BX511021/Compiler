@@ -1,6 +1,6 @@
 package symbolstruct;
 
-import component.FlowGraph;
+import convert.FlowGraph;
 
 import symbolstruct.entries.Entry;
 

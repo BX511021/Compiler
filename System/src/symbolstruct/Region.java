@@ -1,6 +1,6 @@
 package symbolstruct;
 
-import imcode.imexp.IMExp;
+import convert.imcode.imexp.IMExp;
 import symbolstruct.entries.Entry;
 
 import java.util.ArrayList;

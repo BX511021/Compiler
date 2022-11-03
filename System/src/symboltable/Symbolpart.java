@@ -1,7 +1,5 @@
 package symboltable;
 
-import global.Errorpart.ErrorLog;
-
 import java.util.ArrayList;
 
 public class Symbolpart {

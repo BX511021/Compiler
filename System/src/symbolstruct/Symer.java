@@ -1,7 +1,7 @@
 package symbolstruct;
 
 import datatype.Datatype;
-import narray.NArray;
+import convert.narray.NArray;
 import symbolstruct.entries.*;
 
 import java.util.ArrayList;

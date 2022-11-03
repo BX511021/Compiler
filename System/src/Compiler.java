@@ -1,8 +1,7 @@
 import Node.Node;
-import Node.SYMBOL;
 import Token.Token;
 import Token.TokenS;
-import global.Errorpart.ErrorLog;
+import ErrorPart.ErrorLog;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;

@@ -1,7 +1,7 @@
 package symbolstruct.entries;
 
 import datatype.*;
-import narray.NArrayItem;
+import convert.narray.NArrayItem;
 
 public class VarEntry extends AbsVarEntry implements NArrayItem {
 

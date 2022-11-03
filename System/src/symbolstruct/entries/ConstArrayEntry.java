@@ -2,7 +2,7 @@ package symbolstruct.entries;
 
 
 import datatype.Datatype;
-import narray.NArray;
+import convert.narray.NArray;
 
 public class ConstArrayEntry extends ArrayEntry implements ConstFeature {
     public NArray value;

@@ -1,8 +1,8 @@
-import global.Errorpart.ErrorLog;
+import ErrorPart.ErrorLog;
 import Node.SYMBOL;
 import Token.*;
 import Node.*;
-import global.Errorpart.ErrorType;
+import ErrorPart.ErrorType;
 
 import java.util.ArrayList;
 import java.util.List;

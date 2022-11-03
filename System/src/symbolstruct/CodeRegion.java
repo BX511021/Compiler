@@ -1,7 +1,7 @@
 package symbolstruct;
 
 
-import imcode.imexp.IMExp;
+import convert.imcode.imexp.IMExp;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -58,6 +58,10 @@ public class CodeRegion {
 //        Logger.GetLogger().MIPSLog(CodeText.dumpData());
 //        Logger.GetLogger().MIPSLog(".text");
 //        Logger.GetLogger().MIPSLog(CodeText.dumpText());
+        System.out.println(".data");
+        System.out.println(CodeText.dumpData());
+        System.out.println(".text");
+        System.out.println(CodeText.dumpText());
         // 将data和text区打印出来
     }
 

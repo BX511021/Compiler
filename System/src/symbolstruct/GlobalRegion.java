@@ -1,7 +1,7 @@
 package symbolstruct;
 
 
-import component.FlowGraph;
+import convert.FlowGraph;
 import symbolstruct.entries.AbsVarEntry;
 import symbolstruct.entries.Entry;
 

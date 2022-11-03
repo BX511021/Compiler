@@ -1,6 +1,6 @@
 package symboltable;
 import exceptions.DuplicatedDefineException;
-import global.Errorpart.ErrorType;
+import ErrorPart.ErrorType;
 import symboltable.symbols.*;
 import java.util.ArrayList;
 import java.util.HashMap;

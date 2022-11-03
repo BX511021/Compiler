@@ -1,7 +1,7 @@
 import Node.*;
 import exceptions.DuplicatedDefineException;
-import global.Errorpart.ErrorLog;
-import global.Errorpart.ErrorType;
+import ErrorPart.ErrorLog;
+import ErrorPart.ErrorType;
 import symboltable.*;
 import symboltable.symbols.ArraySymbolItem;
 import symboltable.symbols.FuncSymbolItem;
