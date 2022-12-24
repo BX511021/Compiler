@@ -1,5 +1,4 @@
 package exceptions;
-import Node.GUNIT;
 import Token.*;
 
 
@@ -8,19 +7,6 @@ public class GramParseException extends Exception {
     private GramParseException from;
     private Token curToken;
     private int level;
-
-    public GramParseException(String mess) {
-        this.from = null;
-        this.mess = mess;
-    }
-
-    public GramParseException(GramParseException e, Token curToken, int level, GUNIT curGUnit) {
-        this.from = e;
-        this.curToken = curToken;
-        this.level = level;
-        this.mess = "Fail to execute grammar parse for LINE:" + curToken.getLine() +
-                " VALUE:" + curToken.getValue() + "\tin LEVEL: " + level + "\tGUNIT: "+curGUnit;
-    }
 
     @Override
     public String getMessage() {

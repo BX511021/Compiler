@@ -1,6 +1,7 @@
 package convert.imcode.imexp;
 
 
+import ErrorPart.Config;
 import convert.regpool.RegPool;
 import convert.imcode.imitem.IMItem;
 import convert.imcode.imitem.IntItem;
@@ -41,7 +42,7 @@ public class DivExp extends IMExp {
             ret.addLine(String.format("mflo %s", pool.findNoLoad(toAssign)));
         } else if (b instanceof ConstValueEntry) {
             Integer bValue = (Integer) ((ConstValueEntry) b).getValue();
-            Integer powerOfTwo = tmpNameSed.getTmpNameSed();
+            Integer powerOfTwo = Config.getTmpNameSed();
             if(bValue == 1) {
                 String aReg = pool.find(a);
                 ret.addLine(String.format("add %s, %s, $0", pool.findNoLoad(toAssign), aReg));
@@ -50,7 +51,7 @@ public class DivExp extends IMExp {
                 String tmpReg = pool.allocTmpReg();
                 String aReg = pool.find(a);
                 String assignReg = pool.findNoLoad(toAssign);
-                String tmpLabel = "templabel" + tmpNameSed.getTmpNameSed();
+                String tmpLabel = "templabel" + Config.getTmpNameSed();
                 ret.addLine(String.format("add %s, %s, $0", tmpReg, aReg));
                 ret.addLine(String.format("sra %s, %s, %d", assignReg, aReg, powerOfTwo));
                 ret.addLine(String.format("bgez %s, %s", aReg, tmpLabel));

@@ -1,5 +1,6 @@
 package convert;
 
+import ErrorPart.Config;
 import convert.optimizers.ConstOptimizer;
 import symboltable.*;
 import Node.Label;
@@ -803,7 +804,7 @@ public class FlowGraph {
         ArrayList<IMExp> buf = new ArrayList<>();   // 缓存区
         for (int i = 0; i < this.imExps.size(); i++) {
             if (isEnterExp(i) && !buf.isEmpty()) {
-                BasicBlock toCreate = new BasicBlock(buf, this, "BK_" + tmpNameSed.getTmpNameSed());
+                BasicBlock toCreate = new BasicBlock(buf, this, "BK_" + Config.getTmpNameSed());
                 this.blocks.add(toCreate);
                 for (IMExp exp : buf) {
                     this.exp2block.put(exp, toCreate);
@@ -814,7 +815,7 @@ public class FlowGraph {
             buf.add(this.imExps.get(i));
         }
 
-        BasicBlock toCreate = new BasicBlock(buf, this, "BK_" + tmpNameSed.getTmpNameSed());
+        BasicBlock toCreate = new BasicBlock(buf, this, "BK_" + Config.getTmpNameSed());
         this.blocks.add(toCreate);
         for (IMExp exp : buf) {
             this.exp2block.put(exp, toCreate);

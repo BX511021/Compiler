@@ -1,4 +1,5 @@
 package symboltable;
+import ErrorPart.Config;
 import exceptions.DuplicatedDefineException;
 import ErrorPart.ErrorType;
 import symboltable.symbols.*;
@@ -212,7 +213,7 @@ public class Block {
     }
 
     public String allocTempName(String type) {
-        return "#" + type + tmpNameSed.getTmpNameSed();
+        return "#" + type + Config.getTmpNameSed();
     }
 
     public void toLog() {

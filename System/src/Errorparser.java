@@ -10,11 +10,11 @@ import symboltable.symbols.VarSymbolItem;
 
 import java.util.ArrayList;
 
-public class Visitor {
+public class Errorparser {
     private SymbolTable symbolTable;
     private Node root;
 
-    public Visitor(Node root) {
+    public Errorparser(Node root) {
         this.symbolTable = new SymbolTable();
         this.root = root;
     }

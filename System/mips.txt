@@ -1,0 +1,90 @@
+.data
+change1: .space 4
+_STR_VALUE_num_13: .ascii "Hello World\0"
+.text
+
+# Global Register init
+jal main
+nop
+li $v0, 10
+syscall
+# Function starts here gets1
+gets1:
+addiu $sp, $sp, -36
+sw $ra, 24($sp)
+
+# Global Register init
+# Global Register Pool load var2 From memory
+lw $s2 28($sp)
+# Global Register Pool load var1 From memory
+lw $s0 32($sp)
+
+# import var1
+
+# import var2
+
+# _TEMP_num_3 = var1 + var2
+add $s2, $s0, $s2
+
+
+# change1 = _TEMP_num_3
+add $t0, $s2, $0
+
+# Local Register Pool save change1 To memory
+sw $t0 change1
+
+# return _TEMP_num_3
+add $v0, $0, $s2
+# ret and restore the frame
+lw $ra, 24($sp)
+addiu $sp, $sp, 36
+jr $ra
+
+# final return
+lw $ra, 24($sp)
+addiu $sp, $sp, 36
+jr $ra
+# Function ends here gets1
+# Function starts here main
+main:
+addiu $sp, $sp, -48
+sw $ra, 44($sp)
+
+# Global Register init
+
+# ConNotJumpExp BeqExp 1 1 main_TEMP_num_6_IF_END
+
+# main_TEMP_num_6_IF_BODY_BEGIN:
+main_TEMP_num_6_IF_BODY_BEGIN:
+
+
+# jump main_TEMP_num_6_ELSE_END
+j main_TEMP_num_6_ELSE_END
+
+
+# main_TEMP_num_6_IF_END:
+main_TEMP_num_6_IF_END:
+
+
+# main_TEMP_num_6_ELSE_END:
+main_TEMP_num_6_ELSE_END:
+
+
+# print "_STR_VALUE_num_13"
+la $a0, _STR_VALUE_num_13
+li $v0, 4
+syscall
+
+
+# return 0
+addi $v0, $0, 0
+# ret and restore the frame
+lw $ra, 44($sp)
+addiu $sp, $sp, 48
+jr $ra
+
+# final return
+lw $ra, 44($sp)
+addiu $sp, $sp, 48
+jr $ra
+# Function ends here main

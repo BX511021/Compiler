@@ -8,7 +8,7 @@ import convert.imcode.imexp.*;
 import convert.imcode.imitem.IMItemFac;
 import convert.imcode.imitem.IMItemType;
 import convert.imcode.imitem.VarItem;
-import symboltable.tmpNameSed;
+import ErrorPart.Config;
 
 import symbolstruct.Region;
 import symbolstruct.entries.Entry;
@@ -78,7 +78,7 @@ public class GlobalExpOptimizer extends Optimizer {
                 break;
             }
 
-            Entry newEntry = new VarEntry("GLB_EXP_OPT_" + tmpNameSed.getTmpNameSed(), new IntType());
+            Entry newEntry = new VarEntry("GLB_EXP_OPT_" + Config.getTmpNameSed(), new IntType());
             newEntry.in = this.belongRegion.scope;
             this.belongRegion.frame.insertEntry(newEntry);
 

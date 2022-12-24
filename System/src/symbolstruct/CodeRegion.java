@@ -52,17 +52,6 @@ public class CodeRegion {
         for (FuncRegion region : regions) {
             region.gen();
         }
-        // 初始化所有函数模块，详见FuncRegion
-
-//        Logger.GetLogger().MIPSLog(".data");
-//        Logger.GetLogger().MIPSLog(CodeText.dumpData());
-//        Logger.GetLogger().MIPSLog(".text");
-//        Logger.GetLogger().MIPSLog(CodeText.dumpText());
-        System.out.println(".data");
-        System.out.println(CodeText.dumpData());
-        System.out.println(".text");
-        System.out.println(CodeText.dumpText());
-        // 将data和text区打印出来
     }
 
     public void addIMExp(IMExp e) {

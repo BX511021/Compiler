@@ -2,6 +2,7 @@ import Node.Node;
 import Token.Token;
 import Token.TokenS;
 import ErrorPart.ErrorLog;
+import symbolstruct.CodeText;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -15,18 +16,22 @@ public class Compiler {
         ArrayList<Token> tokenArrayList;
         Scanner scan = new Scanner(System.in);
         TokenS tokens = new TokenS();
+        String path = ".";
 
-        File in = new File("System/testfile.txt");
-        File out = new File("System/output.txt");
-        File error = new File("System/error.txt");
+        File in = new File(String.format("%s/testfile.txt",path));
+        File out = new File(String.format("%s/output.txt",path));
+        File error = new File(String.format("%s/error.txt",path));
+        File MIPS = new File(String.format("%s/mips.txt",path));
 
         FileInputStream input = new FileInputStream(in);
         FileOutputStream output = new FileOutputStream(out);
         FileOutputStream errorput = new FileOutputStream(error);
+        FileOutputStream mipsput = new FileOutputStream(MIPS);
 
         InputStreamReader isr = new InputStreamReader(input, StandardCharsets.UTF_8);
         OutputStreamWriter osr = new OutputStreamWriter(output, StandardCharsets.UTF_8);
         OutputStreamWriter esr = new OutputStreamWriter(errorput, StandardCharsets.UTF_8);
+        OutputStreamWriter Misp_sr = new OutputStreamWriter(mipsput, StandardCharsets.UTF_8);
 
         BufferedReader br = new BufferedReader(isr);
         BufferedWriter bw = new BufferedWriter(osr);
@@ -42,6 +47,11 @@ public class Compiler {
         ew.write("");
         ew.flush();
 
+        FileWriter mips_w = new FileWriter(MIPS);
+        String inline3 = null;
+        mips_w.write("");
+        mips_w.flush();
+
     /*
         利用词法分析解析原本的程序，记录token以及行数，储存在一个arrayList里面
 
@@ -56,7 +66,6 @@ public class Compiler {
             }
 
         }
-
         tokenArrayList=lexparser.TokenList;
 
 //        for (Token toekn:tokenArrayList) {
@@ -72,8 +81,21 @@ public class Compiler {
         System.out.println(outputFile);
         fw.write(outputFile);
         fw.flush();
-        Visitor visitor=new Visitor(seed);
-        visitor.visit();
+
+//        Errorparser errorparser = new Errorparser(seed);
+//        errorparser.visit();
+
+
+        Converter converter = new Converter(seed);
+        converter.visit();
+        mips_w.write(".data\n");
+        mips_w.write(CodeText.dumpData());
+        mips_w.write(".text\n");
+        mips_w.write(CodeText.dumpText());
+        mips_w.flush();
+
+
+
         ErrorLog.DumpError(ew);
 
         return;

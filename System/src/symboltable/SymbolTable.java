@@ -1,5 +1,7 @@
 package symboltable;
 
+import ErrorPart.Config;
+
 public class SymbolTable {
     public Block present;
     public Block root;
@@ -12,15 +14,15 @@ public class SymbolTable {
     public void addOneBlock(BlockType type) {
         Block temp;
         if (type.equals(BlockType.FUNC_BLOCK)) {
-            temp = new Block("#unfilledFunc" + tmpNameSed.getTmpNameSed(), type);
+            temp = new Block("#unfilledFunc" + Config.getTmpNameSed(), type);
         } else if (type.equals(BlockType.IF_BLOCK)) {
-            temp = new Block("#if" + tmpNameSed.getTmpNameSed(), type);
+            temp = new Block("#if" + Config.getTmpNameSed(), type);
         } else if (type.equals(BlockType.WHILE_BLOCK)) {
-            temp = new Block("#while" + tmpNameSed.getTmpNameSed(), type);
+            temp = new Block("#while" + Config.getTmpNameSed(), type);
         } else if (type.equals(BlockType.GLOBAL_BLOCK)) {
             temp = new Block("#global", type);
         } else {
-            temp = new Block("#normal" + tmpNameSed.getTmpNameSed(), type);
+            temp = new Block("#normal" + Config.getTmpNameSed(), type);
         }
 
         if (type.equals(BlockType.GLOBAL_BLOCK)) {

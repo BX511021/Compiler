@@ -11,6 +11,12 @@ import java.util.Collections;
 public class Config {
 
     public static long ProgramInitTime = System.currentTimeMillis();
+    private static Integer tmpNameSed = 0;
+
+
+    public static Integer getTmpNameSed() {
+        return tmpNameSed++;
+    }
 
     public static ArrayList<Register> getGlbReg() {
         Register[] regs = new Register[]{
